@@ -14,7 +14,7 @@
 
 - **用户访问**：经 Nginx（TLS 终止、反向代理、静态资源）；生产环境必须启用 HTTPS。
 - **前端**：Vue 3 + Vite 构建产物由 Nginx 托管；通过同源或配置好的跨域访问后端 REST API。
-- **后端**：单一 **Spring Boot 3.4.4**（Java 21）进程提供业务 API、搜索编排、文件服务及 **AI 能力**；AI 非独立微服务，而是在应用内通过 **Spring AI Alibaba 1.1.2.2** 调用阿里云 DashScope（通义千问），并与 Elasticsearch、Redis、MySQL、MinIO 协同。
+- **后端**：单一 **Spring Boot 3.5.12**（Java 21）进程提供业务 API、搜索编排、文件服务及 **AI 能力**；AI 非独立微服务，而是在应用内通过 **Spring AI Alibaba 1.1.2.2** 调用阿里云 DashScope（通义千问），并与 Elasticsearch、Redis、MySQL、MinIO 协同。
 - **数据层**：MySQL 为权威业务库；Elasticsearch 为搜索与 RAG 召回；Redis 为会话与热点缓存；MinIO 为对象存储。本地与联调环境由 Docker Compose 编排；生产需单独评估 **Elasticsearch 是否与业务同机**（2 核 4G 下同机风险高，建议升配或 ES 独立节点）。
 
 ### 1.2 逻辑结构示意（Mermaid）
@@ -23,10 +23,10 @@
 flowchart TB
   User[用户] --> Nginx[Nginx]
   Nginx --> Static[前端静态资源]
-  Nginx --> Boot[Spring Boot 3.4.4]
-  Boot --> MySQL[(MySQL 8.0.45)]
+  Nginx --> Boot[Spring Boot 3.5.12]
+  Boot --> MySQL[(MySQL 8.4.8)]
   Boot --> ES[(Elasticsearch 8.19.13)]
-  Boot --> Redis[(Redis 7.4.8)]
+  Boot --> Redis[(Redis 8.6.1)]
   Boot --> MinIO[(MinIO)]
   Boot --> DashScope[DashScope 通义千问]
 ```
@@ -41,13 +41,13 @@ flowchart TB
 | | 动画 | GSAP 3.14.2 + Vue 内置过渡 |
 | | HTTP | Axios |
 | | 构建 | Vite 8.0.2 |
-| **后端** | Java | 21 (LTS) |
-| | Spring Boot | **3.4.4** |
+| **后端** | Java | 21（Temurin 21.0.10+7） |
+| | Spring Boot | **3.5.12** |
 | | Spring AI Alibaba | **1.1.2.2**（与 [GitHub Releases Latest](https://github.com/alibaba/spring-ai-alibaba/releases) 对齐；升级前核对官方 BOM 与模块拆分） |
 | | Elasticsearch | 服务端 8.19.13；Java API 客户端主版本与集群一致 |
 | | 向量存储（RAG） | Spring AI 官方 **`spring-ai-starter-vector-store-elasticsearch`**（`ElasticsearchVectorStore`）+ DashScope **`EmbeddingModel`**（`spring-ai-alibaba-starter-dashscope`）；版本与 **Spring AI BOM**、**Spring AI Alibaba 1.1.2.2** 对齐，以各自发布说明为准 |
-| | MySQL | Connector 随 Spring Boot 管理或与 MySQL 8.0.45 实例匹配 |
-| | Redis | Redis 7.4.8（Lettuce / Spring Boot 默认客户端） |
+| | MySQL | Connector 随 Spring Boot 管理或与 MySQL 8.4.8 实例匹配 |
+| | Redis | Redis 8.6.1（Lettuce / Spring Boot 默认客户端） |
 | | MinIO | Java SDK 8.x 当前稳定版 |
 | **基础设施** | Nginx、Docker、Docker Compose | Alpine / Compose V2 |
 
@@ -236,9 +236,9 @@ flowchart TB
 
 - **nginx**：`nginx:1.28.2-alpine`，暴露 80/443，挂载配置与前端 `dist`。
 - **app**：后端镜像，依赖 MySQL、ES、Redis、MinIO；`SPRING_PROFILES_ACTIVE` 区分环境。  
-- **mysql**：`mysql:8.0.45`，库名与账号由环境变量注入。
+- **mysql**：`mysql:8.4.8`，库名与账号由环境变量注入。
 - **elasticsearch**：`docker.elastic.co/elasticsearch/elasticsearch:8.19.13`；单节点 discovery 与环境变量按 ES 8 官方文档；**开发可临时关闭安全插件简化联调，生产必须启用认证与 TLS**。
-- **redis**：`redis:7.4.8-alpine`；生产建议密码与持久化策略。
+- **redis**：`redis:8.6.1-alpine`；生产建议密码与持久化策略。
 - **minio**：`minio/minio:RELEASE.2026-03-17T21-25-16Z`（固定稳定 RELEASE tag）；控制台端口单独映射；数据目录 **必须挂卷**。
 
 Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `version` 键）。
@@ -259,7 +259,7 @@ Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `
 
 ### 5.1 后端
 
-- 以 **Spring Boot 3.4.4** 的依赖管理为主；额外库（ES Java API、MinIO、Spring AI Alibaba）版本与 BOM 冲突时 **以 Spring Boot 与 Spring AI Alibaba 官方兼容矩阵为准**。
+- 以 **Spring Boot 3.5.12** 的依赖管理为主；额外库（ES Java API、MinIO、Spring AI Alibaba）版本与 BOM 冲突时 **以 Spring Boot 与 Spring AI Alibaba 官方兼容矩阵为准**。
 - **Spring AI Alibaba 固定 1.1.2.2**，升级时同步阅读 [Release Notes](https://github.com/alibaba/spring-ai-alibaba/releases)。  
 - 启用向量 RAG 时：在 BOM 下增加 **Spring AI** 的 **`spring-ai-starter-vector-store-elasticsearch`**，与 **`spring-ai-alibaba-starter-dashscope`**（嵌入）组合；具体坐标与版本以 [Spring AI 向量库文档](https://docs.spring.io/spring-ai/reference/api/vectordbs/elasticsearch.html) 与当前 BOM 为准。  
 
