@@ -1,6 +1,10 @@
 ---
 description: "TypeScript coding style extending common rules"
-globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
 alwaysApply: false
 ---
 # TypeScript/JavaScript Coding Style
@@ -61,3 +65,4 @@ const validated = schema.parse(input)
 - No `console.log` statements in production code
 - Use proper logging libraries instead
 - See hooks for automatic detection
+

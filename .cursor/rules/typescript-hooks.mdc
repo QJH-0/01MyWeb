@@ -1,6 +1,10 @@
 ---
 description: "TypeScript hooks extending common rules"
-globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
 alwaysApply: false
 ---
 # TypeScript/JavaScript Hooks
@@ -18,3 +22,4 @@ Configure in `~/.claude/settings.json`:
 ## Stop Hooks
 
 - **console.log audit**: Check all modified files for `console.log` before session ends
+

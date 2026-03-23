@@ -1,6 +1,10 @@
 ---
 description: "TypeScript security extending common rules"
-globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
 alwaysApply: false
 ---
 # TypeScript/JavaScript Security
@@ -24,3 +28,4 @@ if (!apiKey) {
 ## Agent Support
 
 - Use **security-reviewer** skill for comprehensive security audits
+
