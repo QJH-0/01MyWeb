@@ -239,7 +239,7 @@ flowchart TB
 - **mysql**：`mysql:8.4.8`，库名与账号由环境变量注入。
 - **elasticsearch**：`docker.elastic.co/elasticsearch/elasticsearch:8.19.13`；单节点 discovery 与环境变量按 ES 8 官方文档；**开发可临时关闭安全插件简化联调，生产必须启用认证与 TLS**。
 - **redis**：`redis:8.6.1-alpine`；生产建议密码与持久化策略。
-- **minio**：`minio/minio:RELEASE.2026-03-17T21-25-16Z`（固定稳定 RELEASE tag）；控制台端口单独映射；数据目录 **必须挂卷**。
+- **minio**：`minio/minio:latest`（当前环境只能拉取到 `latest`）；控制台端口单独映射；数据目录 **必须挂卷**。
 
 Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `version` 键）。
 
@@ -278,6 +278,30 @@ Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `
 4. **MinIO 与 rustfs 无缝切换（S3 兼容契约）**：文件读写与对外访问必须只依赖 S3 兼容语义（仅使用 Put/Get/List/Delete，预签名 URL 由后端生成；禁止使用 MinIO 私有 API）；寻址与签名层面统一采用 `path-style`（`/<bucket>/<key>` 形式）与固定 `region=us-east-1` 的 SigV4 签名，减少“MinIO vs rustfs 处理差异”导致的兼容风险；对象 `key` 的编码规则由应用统一约定为 UTF-8 的 RFC3986 percent-encoding，保留 `/` 作为层级分隔并避免 double-encode，确保历史对象在任意后端间可定位；访问 URL 的 base 域名通过配置注入（对接 MinIO/rustfs 的外部可访问地址），避免容器内域名泄漏；对象命名前缀与结构由应用统一生成（例如 `myweb/<resourceType>/<yyyy>/<MM>/<uuid>` 形式），从而保证“切换存储后 key 空间不变”；在联调/CI 引入契约测试（同一批 key 与同一批预期行为在 MinIO 与 rustfs 两种后端均通过：Put 后可 Get、List 可见、预签名可下载），以此作为“可无缝切换”的验收门槛。  
 5. **HTTPS**：生产强制 TLS（如 Let’s Encrypt）。  
 6. **同机资源**：2 核 4G 运行 ES + JVM 应用偏紧，文档与需求已建议升配或分离 ES。  
+
+---
+
+## 七、文档执行口径映射（2026-03-24）
+
+本节用于将技术规范与执行文档统一，避免“规范已定义但落地步骤不一致”。
+
+### 7.1 模块推进映射
+
+- 模块顺序统一采用：`M0 -> M1 -> M2 -> M3 -> M4 -> M5 -> M6 -> M7 -> M8`。
+- 每阶段实施入口统一为 `docs/开发文档/00-开发文档导航.md` 对应文档。
+- 技术规范负责“怎么做”，阶段文档负责“先做什么、如何验收”。
+
+### 7.2 统一 DoD 与测试门槛
+
+- 每模块执行流程固定：`任务拆分 -> 实现 -> 自测 -> 联调 -> 回归 -> 提交`。
+- 最低门槛：前后端可启动、核心接口可调用、核心页面可访问、日志无持续报错。
+- 若任一门槛不满足，则不得切换到下一阶段。
+
+### 7.3 开发/生产边界（统一口径）
+
+- 开发环境可为联调临时简化安全配置；生产环境必须启用 HTTPS、鉴权与最小权限原则。
+- 密钥仅通过环境变量或密钥管理注入，禁止写入仓库。
+- Elasticsearch 开发可简化认证用于联调，生产必须启用认证与 TLS。
 
 ---
 

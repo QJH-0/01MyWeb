@@ -1,6 +1,6 @@
 ---
-description: "Security: mandatory checks, secret management, response protocol"
-alwaysApply: true
+description: "Security reference (merged into 01common)"
+alwaysApply: false
 ---
 # Security Guidelines
 

@@ -1,6 +1,6 @@
 ---
-description: "Common patterns: repository, API response, skeleton projects"
-alwaysApply: true
+description: "Common patterns reference (merged into 01common)"
+alwaysApply: false
 ---
 # Common Patterns
 

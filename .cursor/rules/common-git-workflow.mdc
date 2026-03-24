@@ -1,6 +1,6 @@
 ---
-description: "Git workflow: conventional commits, PR process"
-alwaysApply: true
+description: "Git workflow reference (merged into 01common)"
+alwaysApply: false
 ---
 # Git Workflow
 

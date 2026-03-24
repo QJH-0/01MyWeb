@@ -1,6 +1,6 @@
 ---
-description: "Performance: model selection, context management, build troubleshooting"
-alwaysApply: true
+description: "Performance reference (merged into 01common)"
+alwaysApply: false
 ---
 # Performance Optimization
 

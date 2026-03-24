@@ -1,6 +1,6 @@
 ---
-description: "Testing requirements: 80% coverage, TDD workflow, test types"
-alwaysApply: true
+description: "Testing reference (merged into 01common)"
+alwaysApply: false
 ---
 # Testing Requirements
 

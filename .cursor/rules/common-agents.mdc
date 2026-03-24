@@ -1,6 +1,6 @@
 ---
-description: "Agent orchestration: available agents, parallel execution, multi-perspective analysis"
-alwaysApply: true
+description: "Agent orchestration reference (merged into 01common)"
+alwaysApply: false
 ---
 # Agent Orchestration
 

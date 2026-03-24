@@ -1,6 +1,6 @@
 ---
-description: "Hooks system: types, auto-accept permissions, TodoWrite best practices"
-alwaysApply: true
+description: "Hooks reference (merged into 01common)"
+alwaysApply: false
 ---
 # Hooks System
 

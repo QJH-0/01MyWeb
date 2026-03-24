@@ -1,0 +1,60 @@
+:root {
+  /* 莫兰迪色系（语义化变量，便于后续设计微调） */
+  --primary: #7d9d9c;
+  --primary-light: #9db5b2;
+  --primary-dark: #5a7a79;
+
+  --secondary: #b8a9c9;
+
+  --accent: #e6b8a2;
+
+  --bg-primary: #f7f5f3;
+  --bg-secondary: #ede8e3;
+  --bg-card: #ffffff;
+
+  --text-primary: #2c3e50;
+  --text-secondary: #5d6d7e;
+  --text-muted: #95a5a6;
+
+  --border: #d5d5d5;
+
+  --success: #5bbd8a;
+  --warning: #e9b35b;
+  --error: #db6d6d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #16171d;
+    --bg-secondary: #1f2028;
+    --bg-card: #1c1d24;
+
+    --text-primary: #e5e7eb;
+    --text-secondary: #b6bcc6;
+    --text-muted: #9aa3ad;
+
+    --border: #2e303a;
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: 0.18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+}
+

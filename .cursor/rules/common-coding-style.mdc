@@ -1,6 +1,6 @@
 ---
-description: "ECC coding style: immutability, file organization, error handling, validation"
-alwaysApply: true
+description: "Coding style reference (merged into 01common)"
+alwaysApply: false
 ---
 # Coding Style
 
