@@ -1,10 +1,18 @@
 # MyWeb 个人网站技术规范文档
 
-**文档版本**: v1.3  
-**更新日期**: 2026-03-23  
+**文档版本**: v1.4  
+**更新日期**: 2026-03-24  
 **关联文档**: `需求文档.md`
 
 本文档只描述**方案与约定**，不包含具体代码实现示例。
+
+## 0. 执行摘要（压缩版）
+
+- AI 执行先读：`docs/开发文档/00C-最终压缩执行版（AI只读此文档先行）.md`。
+- 类设计与关键方法基线：`docs/开发文档/00D-全模块实现方案与类设计蓝图.md`。
+- 接口契约唯一来源：`docs/开发文档/API文档与系统架构.md`。
+- 阶段顺序固定：`M0 -> M1 -> M2 -> M3 -> M4 -> M5 -> M6 -> M7 -> M8`。
+- 本文档只负责技术选型与非功能约束，不再重复维护接口字段细节。
 
 ---
 
@@ -15,7 +23,7 @@
 - **用户访问**：经 Nginx（TLS 终止、反向代理、静态资源）；生产环境必须启用 HTTPS。
 - **前端**：Vue 3 + Vite 构建产物由 Nginx 托管；通过同源或配置好的跨域访问后端 REST API。
 - **后端**：单一 **Spring Boot 3.5.12**（Java 21）进程提供业务 API、搜索编排、文件服务及 **AI 能力**；AI 非独立微服务，而是在应用内通过 **Spring AI Alibaba 1.1.2.2** 调用阿里云 DashScope（通义千问），并与 Elasticsearch、Redis、MySQL、MinIO 协同。
-- **数据层**：MySQL 为权威业务库；Elasticsearch 为搜索与 RAG 召回；Redis 为会话与热点缓存；MinIO 为对象存储。本地与联调环境由 Docker Compose 编排；生产需单独评估 **Elasticsearch 是否与业务同机**（2 核 4G 下同机风险高，建议升配或 ES 独立节点）。
+- **数据层**：内容主源采用 **Markdown（Source of Truth）**；MySQL 用于服务化读取与结构化查询缓存；Elasticsearch 用于全文搜索与 RAG 召回；Redis 为会话与热点缓存；MinIO 为对象存储。部署基线固定为 **单机 Docker Compose**（首版）。
 
 ### 1.2 逻辑结构示意（Mermaid）
 
@@ -42,16 +50,16 @@ flowchart TB
 | | HTTP | Axios |
 | | 构建 | Vite 8.0.2 |
 | **后端** | Java | 21（Temurin 21.0.10+7） |
-| | Spring Boot | **3.5.12** |
-| | Spring AI Alibaba | **1.1.2.2**（与 [GitHub Releases Latest](https://github.com/alibaba/spring-ai-alibaba/releases) 对齐；升级前核对官方 BOM 与模块拆分） |
-| | Elasticsearch | 服务端 8.19.13；Java API 客户端主版本与集群一致 |
+| | Spring Boot | **3.5.12（锁定）** |
+| | Spring AI Alibaba | **1.1.2.2（锁定）** |
+| | Elasticsearch | **8.19.13（锁定）**；Java API 客户端主版本与集群一致 |
 | | 向量存储（RAG） | Spring AI 官方 **`spring-ai-starter-vector-store-elasticsearch`**（`ElasticsearchVectorStore`）+ DashScope **`EmbeddingModel`**（`spring-ai-alibaba-starter-dashscope`）；版本与 **Spring AI BOM**、**Spring AI Alibaba 1.1.2.2** 对齐，以各自发布说明为准 |
 | | MySQL | Connector 随 Spring Boot 管理或与 MySQL 8.4.8 实例匹配 |
 | | Redis | Redis 8.6.1（Lettuce / Spring Boot 默认客户端） |
 | | MinIO | Java SDK 8.x 当前稳定版 |
-| **基础设施** | Nginx、Docker、Docker Compose | Alpine / Compose V2 |
+| **基础设施** | Nginx、Docker、Docker Compose | **固定单机 Compose 基线**（Nginx 1.28.2-alpine / Compose V2） |
 
-**依赖管理建议**：使用 `spring-boot-starter-parent` 或官方 BOM 统一管理 Spring 生态版本；Spring AI Alibaba 使用 **1.1.2.2**，具体 `artifactId`（如 starter-dashscope、starter 合集等）以官方 1.1.2.2 发布说明与示例工程为准，避免沿用已废弃的里程碑坐标。
+**依赖管理策略（强制）**：当前版本全部锁定，不因“有新版本”自动升级。任何版本变更必须先更新本规范并通过变更评审，再进入代码实现。
 
 ---
 
@@ -101,14 +109,58 @@ flowchart TB
 - `common/`：统一响应体、分页模型  
 - `resources/`：`application.yml` 及 `application-dev|prod.yml`；`prompts/` 下存放系统提示词 Markdown  
 
-### 3.2 双写同步策略（MySQL + Elasticsearch）
+### 3.1A 内容主源（Markdown）存储与同步（强制）
 
-- 写路径以 **MySQL 事务**为准：文章、项目等变更先落库（作为权威业务数据源）。  
-- 在同一事务中记录 **Outbox 事件**（例如 `es_index_outbox`）：保证“业务提交成功”与“索引更新任务可投递”具备一致性，避免双写丢消息。  
+#### 3.1A.1 存储位置（权威）
+
+- Markdown 主源固定存放在 **GitHub 仓库**内（与代码同仓或独立内容仓均可，但首版默认同仓）。
+- 固定目录约定（首版强制）：
+  - `content/blog/`：博客文章（每篇一个 `.md` 文件）
+  - `content/projects/`：项目条目（每个项目一个 `.md` 文件）
+  - `content/pages/`：站点页面内容（如 `about.md`、`experience.md`）
+
+#### 3.1A.2 文件格式（强制）
+
+- 每个 Markdown 文件必须包含 YAML front-matter（首版强制字段集）：
+  - `id`：数字或可解析为数字（与 MySQL/ES 的 `sourceId` 对齐）
+  - `title`
+  - `slug`（blog 必填，唯一）
+  - `summary`
+  - `category`（可选）
+  - `tags`（数组，可选）
+  - `status`：`DRAFT` / `PUBLISHED`（首版两态）
+  - `updatedAt`（ISO8601 字符串；用于“时间衰减排序”）
+  - `publishedAt`（可选；首次发布时写入，后续不重写）
+  - `coverUrl`（可选）
+
+> 说明：MySQL/Elasticsearch 的内容字段均由 Markdown 解析生成；数据库不得反向覆盖 Markdown。
+
+#### 3.1A.3 后台写入 GitHub（强制）
+
+- 后台管理端对“创建/编辑/发布/取消发布”的最终落地形式：**通过 GitHub API 写入/更新对应 Markdown 文件**（提交到固定分支）。
+- 认证方式：使用 GitHub Token（仅环境变量注入，禁止入库）。
+- 固定环境变量（命名可在实现阶段落到 `.env.example`，但必须存在等价项）：
+  - `GITHUB_CONTENT_OWNER`
+  - `GITHUB_CONTENT_REPO`
+  - `GITHUB_CONTENT_BRANCH`（默认 `main`）
+  - `GITHUB_CONTENT_BASE_PATH`（默认 `content`）
+  - `GITHUB_TOKEN`（仅后台使用）
+
+#### 3.1A.4 同步触发与一致性口径（强制）
+
+- 触发：仅在后台“发布/更新内容”时触发同步（受控）。
+- 顺序：写 GitHub 成功 → 解析 Markdown → 写 MySQL（结构化）+ Outbox → 异步写 ES（全文/向量）。
+- 失败：自动重试 3 次（指数退避），仍失败记录待补偿任务；允许最终一致。
+- 可见性：目标约 `10s` 内可被搜索/检索到（以实现为准）。
+
+### 3.2 内容同步与索引策略（Markdown + MySQL + Elasticsearch）
+
+- 写路径以 **Markdown 内容源**为准：发布/更新时触发结构化入库与索引更新。  
+- 入库阶段在同一事务记录 **Outbox 事件**（例如 `es_index_outbox`）：保证“结构化数据提交成功”与“索引更新任务可投递”具备一致性。  
 - 请求返回成功后由后台 **Relay/Worker** 消费 Outbox 事件执行 ES 写入：  
   - 全文索引（BM25）写入失败：自动重试，失败超过阈值进入死信/告警；不回滚已提交业务（允许搜索最终一致）。  
   - 向量索引写入失败：自动重试，并记录 `sourceId` 以支持重放。  
-- 生产应配套：**定时对账**、**按 ID 全量/增量重建索引**；当 embedding 模型/维度变化时触发 **向量索引全量重建**。  
+- 生产应配套：**定时对账**、**按 sourceId 全量/增量重建索引**；当 embedding 模型/维度变化时触发 **向量索引全量重建**。  
 
 ### 3.3 Elasticsearch 索引与分词（稳定默认方案）
 
@@ -119,14 +171,14 @@ flowchart TB
 
 **项目索引字段（逻辑）**：ID、名称（text）、描述、技术栈 keyword、GitHub/Demo 等 URL 用 keyword。
 
-**高亮**：搜索 API 返回高亮片段字段，由前端渲染；具体 highlighter 类型与 fragment 大小在实现时按 ES 8 文档配置。
+**高亮**：搜索 API 返回高亮片段字段，由前端渲染；固定使用 `unified` highlighter，`fragment_size=150`，`number_of_fragments=3`。
 
 ### 3.4 RAG 方案（基线）
 
 - **召回（关键词）**：Elasticsearch **全文检索（BM25）**，在用户搜索框、管理端检索等场景使用；也可作为 RAG 的一路召回。  
 - **生成**：将系统提示词、可选多轮历史、检索到的片段一并交给 **Spring AI Alibaba** 的 Chat 能力（通义千问），生成回答并返回可追溯的引用（如 `sourceType`、`sourceId`、标题）。  
-- **推荐组合**：个人站知识量有限时，**混合召回（BM25 + 向量）** 对同义词与口语问法更稳。  
-融合策略：使用 **RRF（Reciprocal Rank Fusion）** 融合两路 TopK，默认 `k=60`，避免分数尺度不可比导致的某一路压过另一讲。
+- **固定组合**：本项目 RAG 统一采用 **混合召回（BM25 + 向量）**。  
+融合策略固定使用 **RRF（Reciprocal Rank Fusion）** 融合两路 TopK，`k=60`，避免分数尺度不可比导致的某一路压过另一路。
 
 ### 3.5 向量检索实现方案（当前稳定推荐）
 
@@ -150,7 +202,7 @@ flowchart TB
 
 - **全文索引**（已有）：`blog`、`project`（或合并前缀），负责站点搜索、高亮、BM25 RAG 片段。  
 - **向量索引**（新增）：单独命名（如 `myweb-rag-vector`），仅存放 RAG 用的 **文本块** 与 **向量**，由 `ElasticsearchVectorStore` 管理映射；**维度**与 `spring.ai.vectorstore.elasticsearch.dimensions` 及所选 DashScope 模型输出 **严格一致**（本项目固定为 768 维，以你锁定的 `options.dimensions` 为准）。  
-- **相似度**：默认 **cosine**（与 Spring AI ES VectorStore 默认一致）；若模型文档建议点积且向量已归一化，可评估改为 `dot_product`。  
+- **相似度**：固定 **cosine**（与 Spring AI ES VectorStore 默认一致）。  
 
 **切块（Chunking）**：对“所有需要纳入知识库的公开内容类型”（博客、项目、about/experience/home 精选摘要、公开文件引用等）按结构化方式切分为“摘要块”。默认参数：单块目标约 **500 tokens**，overlap **10%-20%**；每个 `sourceId` 最大块数建议 **<= 12**，避免超长页面导致向量成本失控。  
 每块写入 `Document` 的 **metadata**：`sourceType`（如 blog/project/about/experience/home/file 等）、`sourceId`、业务主键、`chunkIndex`、`title`、公开 URL 路径等，便于过滤与前端展示引用。
@@ -165,8 +217,8 @@ flowchart TB
 #### 3.5.4 查询与混合召回（对话 RAG）
 
 1. 用户输入 → 使用 **`EmbeddingModel`** 生成查询向量（**`query` 文本类型**）。  
-2. **`VectorStore.similaritySearch`**：默认 `topK=6`；默认 `similarityThreshold=0.75`（cosine 语义下过滤弱相关，可按数据微调）；支持 metadata 过滤（如仅“公开源集合”、按 `sourceType` 白名单筛选）。
-3. **可选 BM25 旁路**：用同一用户问题查全文索引，取 `topK=4` 以内片段；与向量结果使用 **RRF** 融合，再按 `sourceId` 去重与截断总 token。
+2. **`VectorStore.similaritySearch`**：固定 `topK=6`；固定 `similarityThreshold=0.75`（cosine 语义下过滤弱相关）；支持 metadata 过滤（如仅“公开源集合”、按 `sourceType` 白名单筛选）。
+3. **BM25 旁路（固定启用）**：用同一用户问题查全文索引，取 `topK=4` 以内片段；与向量结果使用 **RRF** 融合，再按 `sourceId` 去重与截断总 token。
 4. 将最终召回到的“摘要/关键字段片段”注入提示词 → **通义千问** 生成回答（向量库不存全文细节）；当需要更精确回答时，可通过 `sourceId` 再从全文索引（BM25）或业务库拉取对应详情作为“可选补齐上下文”。
 
 #### 3.5.5 知识库构建规则（Chunking & Metadata）
@@ -182,7 +234,7 @@ flowchart TB
 
 #### 3.5.6 配置与运维要点
 
-- **`spring.ai.vectorstore.elasticsearch.initialize-schema`**：开发环境可开启自动建索引；**生产建议关闭**，由发布流水线或运维执行索引模板，避免误删映射。  
+- **`spring.ai.vectorstore.elasticsearch.initialize-schema`**：开发环境可开启自动建索引；**生产固定关闭**，由发布流水线或运维执行索引模板，避免误删映射。  
 - **密钥与计费**：嵌入与 Chat 均走 DashScope，需单独评估 **日均写入块数** 与 **对话 QPS** 的配额与费用。  
 - **资源**：向量索引会增加 ES 磁盘与堆占用；2 核 4G 同机部署时向量维度与 `topK` 宜保守，或 **ES 独立节点**。  
 - **版本升级**：升级 Spring AI / Spring AI Alibaba 时优先阅读 **Upgrade Notes**，复核 `ElasticsearchVectorStore` 与 `EmbeddingModel` 的 Bean 名称与配置前缀是否变更。  
@@ -190,31 +242,38 @@ flowchart TB
 ### 3.6 Spring AI Alibaba 与 DashScope（对话）
 
 - 通过 **环境变量或密钥管理**注入 API Key，禁止写入仓库。  
-- 模型名称选用当前 DashScope 文档中的对话模型（如 qwen-plus 等），按成本与效果在配置中切换。  
+- 模型供应商策略：默认通义（DashScope），同时保留模型适配层以便后续切换；首版不实现多供应商并行。  
+- 模型名称在配置中固定并版本化管理，不做运行时随意切换。  
 - 系统提示词说明助手身份、仅基于站点公开内容回答、无法回答时的措辞、可引导用户访问的页面类型；细节以 `prompts/chat-system.md` 维护。  
 
 ### 3.7 AI 会话与记忆
 
 | 类型 | 介质 | 内容 | 策略 |
 |------|------|------|------|
-| 短期上下文 | Redis | 当前会话最近若干轮对话（结构化 JSON 或列表，保证顺序与 Chat API 一致） | TTL 建议 30 分钟无活动 |
-| 长期记录 | MySQL | 会话元数据、消息正文、可选 token 与引用文档 ID | 持久化，供审计与「继续对话」 |
+| 短期上下文 | Redis + ChatMemory | 当前会话最近若干轮对话（结构化 JSON 或列表，保证顺序与 Chat API 一致） | `MessageWindowChatMemory(maxMessages=20~30)` + Summary 压缩；TTL 建议 30 分钟无活动 |
+| 长期记录 | MySQL（JDBC） | 会话元数据、消息正文、可选 token 与引用文档 ID、用户画像事实 | 持久化，供审计与跨会话恢复 |
 | RAG 知识 | Elasticsearch | **全文索引**（BM25）+ **独立向量索引**（语义召回，见 3.5） | 随内容发布更新；向量更新走异步管道，非对话日志 |
 
-**流程要点**：读 Redis 历史 → **向量相似度检索（主）** 与可选 **BM25 片段** 合并 → 组装消息 → 调用模型 → 写回 Redis → 异步或同步写入 MySQL（按性能与一致性要求选择）。
+**固定口径（AskUserQuestion 决策）**：
+
+- 架构采用 `ChatClient + Agent Graph`：M6 先落地 ChatClient 主链路，Graph 预留 Checkpointer 扩展位。
+- 会话隔离键固定：`conversationId = userId + ":" + sessionId`；Graph 场景同值映射 `threadId`。
+- 长期记忆策略固定：`RAG + 用户画像`，用于跨会话偏好与稳定事实注入。
+- 安全链路固定包含：输入校验、限流、失败降级（重试 + 可解释错误）。
+
+**流程要点**：按 `conversationId` 读 Redis 历史 -> Summary 压缩窗口外消息 -> **向量相似度检索（主）** 与 BM25 片段融合 -> 组装消息 -> 调用模型 -> 写回 Redis -> 持久化 MySQL（消息 + 画像事实）。
 
 **数据模型要点**：会话表含 `session_id`（唯一）、时间戳等；消息表关联会话，外键指向会话的唯一键；字段类型与索引满足查询与清理策略即可。
 
 ### 3.8 API 约定
 
-- **统一响应**：业务码、说明文案、`data` 载荷、服务端时间戳（或 ISO 时间）；具体字段名团队统一即可。  
-- **主要路径（示例）**：博客列表与筛选、搜索、详情、创建/更新（触发双写）；项目列表与详情；**AI 聊天流式（SSE）POST**；文件上传至 MinIO。
-- **AI 聊天流式（SSE）接口约定（Spring MVC）**：  
-  - 技术实现：后端使用 `Spring MVC` 返回 `SseEmitter`，响应头 `Content-Type: text/event-stream`；流式期间将 Spring AI 的 token/片段流映射为 SSE 事件。  
-  - 事件约定：`delta`（增量文本片段）、`done`（生成结束，可包含 `messageId`/耗时/用量）、`error`（错误信息）。  
-  - 心跳：在流式过程中按需发送 `ping`（例如 15s 一次，客户端忽略该事件），防止中间代理空闲断连。  
-  - 生命周期：在 `onCompletion/onTimeout/onError` 中释放资源并终止下游订阅，避免内存泄漏。
-- **安全**：管理后台使用 **JWT + Spring Security** 鉴权；接口限流、CORS 白名单；上传类型与大小校验；联系表单启用“分层防刷”（honeypot + IP/邮箱 rate limit，必要时启用 Turnstile/验证码）。
+- 接口契约统一以 `docs/开发文档/API文档与系统架构.md` 为准，本文档不再重复维护 URL/方法/字段细节。
+- 当前固定口径（必须与契约文档一致）：
+  - 统一响应：`ApiResponse<T>`（含 `success/data/error/timestamp/traceId`）。
+  - 管理鉴权：`X-Admin-Token`（作用于 `/api/admin/**`）。
+  - AI 流式接口：`GET /api/ai/chat/stream`（SSE 事件仅 `delta/done/error`）。
+  - 分页默认：`page=0`、`limit=10`。
+- 安全基线：接口限流、CORS 白名单、上传类型与大小校验；联系表单可启用分层防刷（honeypot + rate limit，必要时验证码）。
 
 ---
 
@@ -243,6 +302,12 @@ flowchart TB
 
 Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `version` 键）。
 
+### 4.4 部署基线约束（强制）
+
+- 首版生产部署固定为：**单机云服务器 + Docker Compose**。
+- 当前规范不包含 K8s 生产编排方案，避免阶段范围漂移。
+- 如需引入 K8s，必须先新增 `M8+` 演进规范文档并评审通过。
+
 ### 4.3 环境变量（分类说明）
 
 - 数据库：root/业务库用户名密码、库名  
@@ -257,16 +322,28 @@ Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `
 
 ## 五、依赖与版本策略（无代码清单）
 
-### 5.1 后端
+### 5.1 版本锁定原则（强制）
+
+- 当前文档中出现的版本号均为**锁定版本**，不得自动追新。
+- 仅允许“先文档评审，后版本升级”的流程。
+- 升级必须记录：升级原因、影响范围、回滚方案、验证清单。
+
+### 5.2 后端
 
 - 以 **Spring Boot 3.5.12** 的依赖管理为主；额外库（ES Java API、MinIO、Spring AI Alibaba）版本与 BOM 冲突时 **以 Spring Boot 与 Spring AI Alibaba 官方兼容矩阵为准**。
 - **Spring AI Alibaba 固定 1.1.2.2**，升级时同步阅读 [Release Notes](https://github.com/alibaba/spring-ai-alibaba/releases)。  
 - 启用向量 RAG 时：在 BOM 下增加 **Spring AI** 的 **`spring-ai-starter-vector-store-elasticsearch`**，与 **`spring-ai-alibaba-starter-dashscope`**（嵌入）组合；具体坐标与版本以 [Spring AI 向量库文档](https://docs.spring.io/spring-ai/reference/api/vectordbs/elasticsearch.html) 与当前 BOM 为准。  
 
-### 5.2 前端
+### 5.3 前端
 
-- `vue`、`vue-router`、`pinia`、`axios`、`element-plus`、`gsap`、`marked`、`highlight.js` 等取 **当前稳定主版本**；`vite`、`@vitejs/plugin-vue`、`sass`、`typescript` 置于开发依赖。  
+- `vue`、`vue-router`、`pinia`、`axios`、`element-plus`、`gsap`、`marked`、`highlight.js` 使用当前文档定义的锁定版本；`vite`、`@vitejs/plugin-vue`、`sass`、`typescript` 置于开发依赖并锁定。  
 - 锁文件（pnpm/npm/yarn）纳入版本控制，保证可复现构建。  
+
+### 5.4 版本核对结论（本次更新）
+
+- Context7 显示：Spring Boot 文档存在 `v3.5.9` 与 `v4.0.x` 线；本项目基线继续锁定 `3.5.12`，不自动迁移 4.x。
+- Context7 显示：Spring AI Alibaba `v1.1.2.2` 可用，继续锁定。
+- 联网结果显示：Spring Boot 4.0.4、Elasticsearch 9.x、Vue 3.5.30、Vite 8.0.2 已有更新/发布信息；本项目按“完全锁定版本”策略不自动升级。
 
 ---
 
@@ -294,7 +371,7 @@ Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `
 ### 7.2 统一 DoD 与测试门槛
 
 - 每模块执行流程固定：`任务拆分 -> 实现 -> 自测 -> 联调 -> 回归 -> 提交`。
-- 最低门槛：前后端可启动、核心接口可调用、核心页面可访问、日志无持续报错。
+- 最低门槛（原则）：前后端可启动、核心接口可调用、核心页面可访问、日志无持续报错。
 - 若任一门槛不满足，则不得切换到下一阶段。
 
 ### 7.3 开发/生产边界（统一口径）
