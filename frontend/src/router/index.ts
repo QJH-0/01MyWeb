@@ -1,13 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import HomeView from '../views/HomeView.vue'
-import AboutView from '../views/AboutView.vue'
-import ExperienceView from '../views/ExperienceView.vue'
-import ContactView from '../views/ContactView.vue'
-import ProjectsView from '../views/ProjectsView.vue'
-import AdminProjectsView from '../views/AdminProjectsView.vue'
-import BlogView from '../views/BlogView.vue'
-import BlogDetailView from '../views/BlogDetailView.vue'
+const HomeView = () => import('../views/HomeView.vue')
+const AboutView = () => import('../views/AboutView.vue')
+const ExperienceView = () => import('../views/ExperienceView.vue')
+const ContactView = () => import('../views/ContactView.vue')
+const ProjectsView = () => import('../views/ProjectsView.vue')
+const AdminProjectsView = () => import('../views/AdminProjectsView.vue')
+const BlogView = () => import('../views/BlogView.vue')
+const BlogDetailView = () => import('../views/BlogDetailView.vue')
+const AdminBlogsView = () => import('../views/AdminBlogsView.vue')
+const SearchView = () => import('../views/SearchView.vue')
+const AiAssistantView = () => import('../views/AiAssistantView.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -16,12 +19,17 @@ const router = createRouter({
     { path: '/about', name: 'about', component: AboutView },
     { path: '/experience', name: 'experience', component: ExperienceView },
     { path: '/contact', name: 'contact', component: ContactView },
-    // M2/M3 占位，避免首页入口跳转后产生 404
     { path: '/projects', name: 'projects', component: ProjectsView },
     { path: '/admin/projects', name: 'adminProjects', component: AdminProjectsView },
     { path: '/blog', name: 'blog', component: BlogView },
-    { path: '/blog/:id', name: 'blogDetail', component: BlogDetailView }
-  ]
+    { path: '/blog/:id', name: 'blogDetail', component: BlogDetailView },
+    { path: '/admin/blogs', name: 'adminBlogs', component: AdminBlogsView },
+    { path: '/search', name: 'search', component: SearchView },
+    { path: '/ai', name: 'ai', component: AiAssistantView }
+  ],
+  scrollBehavior() {
+    return { top: 0 }
+  }
 })
 
 export default router

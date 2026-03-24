@@ -28,7 +28,10 @@ onMounted(async () => {
         <router-link to="/about">关于我</router-link>
         <router-link to="/experience">经历</router-link>
         <router-link to="/contact">联系</router-link>
+        <router-link to="/search">搜索</router-link>
+        <router-link to="/ai">AI助手</router-link>
         <router-link to="/admin/projects">项目管理</router-link>
+        <router-link to="/admin/blogs">博客管理</router-link>
         <span class="nav-spacer" />
         <span class="health" v-if="loading">加载中...</span>
         <span class="health" v-else-if="health && health.success">
@@ -39,7 +42,11 @@ onMounted(async () => {
     </header>
 
     <main class="content">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <transition name="fade-slide" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
 
     <footer class="footer">© {{ new Date().getFullYear() }} myweb</footer>
@@ -110,5 +117,16 @@ onMounted(async () => {
   text-align: center;
   color: var(--text-muted);
   border-top: 1px solid var(--border);
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
 }
 </style>
