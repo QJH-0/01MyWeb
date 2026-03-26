@@ -1,6 +1,10 @@
-# API文档与系统架构（唯一接口契约源）
+# API文档与系统架构（接口契约底座）
 
-> 本文档是接口契约唯一来源。涉及 URL、方法、参数、响应字段、鉴权头、分页默认值时，其他文档必须引用本文，不得重复定义。
+> 本文档是“接口契约底座”。涉及 URL、方法、鉴权头、分页默认值、以及基础 DTO 字段集时，阶段文档必须引用本文并保持一致，不得给出冲突值。
+>
+> 阶段文档允许在“本底座未覆盖/未细化”的维度补充：端点级请求校验规则、错误场景与返回示例、与数据库表/事务边界的映射说明、以及实现所需的最小落地约束。
+>
+> 如果出现冲突，以阶段文档为最终落地；为消除冲突，API 文档只同步“冲突点的最小对齐信息”，并不把阶段级细节上移到本底座。
 
 ## 1. 接口约定（固定）
 
@@ -8,7 +12,7 @@
 - 统一响应包装：`ApiResponse<T>`（固定字段，不允许阶段文档自定义变体）
   - `success: boolean`
   - `data: T | null`
-  - `error: string | null`
+  - `error: string | null`（失败时返回错误码（或 `code: message`）；错误码语义见 `错误码与错误响应.md`）
   - `timestamp: ISO8601`
   - `traceId: string`
 - 追踪头：`X-Trace-Id`
@@ -28,6 +32,12 @@
   - 按 `userId + path` 优先限流，缺失 `userId` 时回退 `IP + path`
   - 配置项：`app.security.rate-limit-per-minute`（默认 `120`）
 
+## 1.0 阶段细化与回填机制（允许）
+
+- 阶段文档可以补充端点级细节（请求/响应字段约束、参数校验触发条件、典型错误场景示例、DB 映射/事务边界/索引或 outbox 事件的落地规则）。
+- 阶段文档不得声明与本底座冲突的内容：基础路径 `/api`、接口方法与 URL、鉴权头要求、以及分页默认值等“确定项”保持与本文一致。
+- 若阶段新增了底座未定义的“实现必要约束”，则仅在与本底座发生冲突时，才需要同步对齐到本文件对应条目或通用约定区（以维持不冲突）。
+
 ## 1.1 权限矩阵（固定）
 
 | 能力 | 访问策略 | 说明 |
@@ -45,6 +55,7 @@
 - 请求体：
   - `username: string`（必填，唯一）
   - `password: string`（必填，强密码策略）
+  - `captchaToken?: string`（可选；默认启用最小校验闸门回退）
 - 响应：`ApiResponse<{ userId: number, username: string }>`
 - 反滥用要求（注册必须实现）：
   - IP 维度注册频控（滑动窗口）
@@ -107,6 +118,7 @@
 1) `GET /api/admin/projects`  
 - 查询参数：
   - `category?: string`
+  - `visible?: boolean`（可选，用于筛选可见状态）
   - `page?: number`（默认 `0`）
   - `limit?: number`（默认 `10`）  
 - 响应：`ApiResponse<PagedResult<ProjectResponseDTO>>`
@@ -117,13 +129,15 @@
 
 3) `POST /api/admin/projects`  
 - 请求体：`ProjectCreateRequest`
-  - `title: string`（必填，<=120）
+  - `title: string`（必填，<=200）
   - `summary: string`（必填，<=500）
+  - `description?: string`
   - `category?: string`（<=80）
-  - `tags: string[]`（必填，元素必填且<=60）
+  - `tags: string[]`（必填，元素必填且<=60，最多 10 个）
   - `coverUrl?: string`（<=1000）
-  - `githubUrl?: string`（<=1000）
-  - `demoUrl?: string`（<=1000）
+  - `projectUrl?: string`（<=1000）
+  - `sourceUrl?: string`（<=1000）
+  - `sortOrder?: number`
   - `visible: boolean`（必填）  
 - 响应：`ApiResponse<ProjectResponseDTO>`
 
@@ -141,12 +155,18 @@
 1) `GET /api/blogs`  
 - 查询参数：
   - `category?: string`
+  - `tag?: string`
   - `page?: number`（默认 `0`）
   - `limit?: number`（默认 `10`）  
 - 响应：`ApiResponse<PagedResult<BlogResponseDTO>>`
 
 2) `GET /api/blogs/{id}`  
 - 路径参数：`id: number`  
+- 响应：`ApiResponse<BlogResponseDTO>`
+
+3) `GET /api/blogs/slug/{slug}`  
+- 路径参数：
+  - `slug: string`
 - 响应：`ApiResponse<BlogResponseDTO>`
 
 ### 2.5 博客（管理，分页默认：`page=0`，`limit=10`）
@@ -172,7 +192,8 @@
   - `summary: string`（必填，<=500）
   - `category?: string`（<=80）
   - `tags: string[]`（必填，元素必填且<=60）
-  - `content: string`（必填）  
+  - `content: string`（必填）
+  - `coverUrl?: string`（<=1000）
 - 响应：`ApiResponse<BlogResponseDTO>`
 
 4) `PUT /api/admin/blogs/{id}`  
@@ -220,6 +241,7 @@
 - 请求头：`Content-Type: multipart/form-data`  
 - 表单参数：
   - `file: MultipartFile`（必填）  
+  - `folder?: string`（可选；用于生成 storage_key 的目录前缀）
 - 响应：`ApiResponse<FileItemDTO>`
 
 2) `GET /api/admin/files`  
@@ -317,6 +339,95 @@
 3) `GET /api/content/experience`  
 - 查询参数：无
 - 响应：`ApiResponse<{ title: string, summary: string, sections: any[], updatedAt: string }>`
+
+### 2.12 通用 DTO 字段约定（最小字段集）
+
+- `PagedResult<T>`
+  - `list: T[]`
+  - `total: number`
+  - `page: number`
+  - `limit: number`
+
+- `ProjectResponseDTO`
+  - `id: number`
+  - `title: string`
+  - `summary: string`
+  - `description?: string`
+  - `category?: string`
+  - `tags: string[]`
+  - `coverUrl?: string`
+  - `projectUrl?: string`
+  - `sourceUrl?: string`
+  - `visible: boolean`
+  - `sortOrder?: number`
+  - `createdAt: string`
+  - `updatedAt: string`
+  - `deletedAt?: string | null`
+
+- `BlogResponseDTO`
+  - `id: number`
+  - `title: string`
+  - `slug: string`
+  - `summary: string`
+  - `content?: string | null`
+  - `category?: string`
+  - `tags: string[]`
+  - `status: string`（如 `DRAFT` / `PUBLISHED`）
+  - `coverUrl?: string`
+  - `viewCount?: number`
+  - `publishedAt?: string | null`
+  - `createdAt: string`
+  - `updatedAt: string`
+  - `deletedAt?: string | null`
+
+- `FileItemDTO`
+  - `id: number`
+  - `fileName: string`
+  - `fileType: string`
+  - `fileSize: number`
+  - `storageKey: string`
+  - `accessUrl: string`
+  - `uploadedBy?: string | null`
+  - `createdAt: string`
+  - `deletedAt?: string | null`
+
+- `SearchItemDTO`（搜索列表最小字段集）
+  - `sourceType: string`（如 `blog` / `project`）
+  - `sourceId: number`
+  - `title: string`
+  - `url: string`
+  - `summary: string`
+  - `highlights?: string[]`（按后端高亮片段生成顺序）
+
+- `CommentItemDTO`（评论列表最小字段集）
+  - `id: number`
+  - `targetType: string`（如 `blog` / `project`）
+  - `targetId: number`
+  - `content: string`
+  - `parentId?: number | null`
+  - `likeCount: number`
+  - `createdAt: string`
+
+- `CitationItem`（AI 回答 sources[] 最小字段集）
+  - `sourceType: string`
+  - `sourceId: number`
+  - `title: string`
+  - `url: string`
+
+- `SessionSummary`
+  - `sessionId: string`
+  - `title?: string | null`
+  - `status: string`（如 `active` / `closed`）
+  - `messageCount?: number`
+  - `createdAt: string`
+  - `updatedAt: string`
+
+- `ChatMessageItem`
+  - `role: string`（如 `user` / `assistant`）
+  - `content: string`
+  - `sources?: CitationItem[]`
+  - `tokens?: number | null`
+  - `createdAt: string`
 
 ## 3. 系统架构
 

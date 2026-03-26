@@ -121,7 +121,66 @@
 
 ### 4.4 错误响应
 
-- 错误返回结构与 HTTP 状态码口径：统一以 `API文档与系统架构.md` 为准，本文件不再维护“错误码表/状态码表”以避免冲突。
+- 错误码表与 `ApiResponse.error` 负载语义：见 `错误码与错误响应.md`
+- 端点级触发条件与返回示例：见下节“端点级 API 细化”
+
+### 4.5 端点级 API 细化（字段约束 / DB 映射 / 错误场景）
+
+#### 4.5.1 `GET /api/ai/chat/stream`（SSE，对话流）
+
+- 认证：
+  - 需 `Authorization: Bearer <accessToken>`
+- 请求参数：
+  - `q` 必填；空/仅空白：`400 VALIDATION_ERROR`
+  - `sessionId?`：为空则新建会话并返回到 `done` 事件；非空则按 `session_id` 查找并进行续聊
+- 会话隔离口径：
+  - `conversationId = userId + ":" + sessionId`（底层落表使用 `session_id`）
+  - 若 sessionId 不存在或不属于当前登录用户：`404 NOT_FOUND`（避免信息泄露）
+- SSE 事件语义（只允许 `delta/done/error`）：
+  - `event: delta`：增量文本片段（前端按顺序拼接展示）
+  - `event: done`：结束事件
+    - 推荐携带：`{ sessionId, sources: CitationItem[] }`
+    - `CitationItem` 映射：`title/url/sourceType/sourceId` 来自检索结果的可追溯元信息
+  - `event: error`：异常结束事件
+    - 事件内容必须包含可识别错误码（取值来自 `错误码与错误响应.md`）
+- 错误场景（示例）：
+  - 空问题：SSE 发 `error`（`400 VALIDATION_ERROR`）
+  - 超时/模型调用失败且无法降级：SSE 发 `error`（`500 INTERNAL_ERROR` 或阶段定义的可解释错误码）
+  - 鉴权失败：`401 UNAUTHORIZED`
+
+#### 4.5.2 `GET /api/ai/sessions`（会话列表）
+
+- 鉴权：需登录
+- 响应结构：`ApiResponse<SessionSummary[]>`
+- `SessionSummary` 映射：
+  - `sessionId` -> `ai_session.session_id`
+  - `title?` -> `ai_session.title`
+  - `status` -> `ai_session.status`
+  - `messageCount?` -> `ai_session.message_count`
+  - `createdAt/updatedAt` -> 对应时间字段
+
+#### 4.5.3 `GET /api/ai/sessions/{sessionId}/messages`（会话详情）
+
+- 鉴权：需登录
+- 响应结构：`ApiResponse<ChatMessageItem[]>`
+- `ChatMessageItem` 映射：
+  - `role` -> `ai_message.role`
+  - `content` -> `ai_message.content`
+  - `sources?` -> `ai_message.sources`（JSON 反序列化后为 CitationItem[]）
+  - `tokens?` -> `ai_message.tokens`
+  - `createdAt` -> `ai_message.created_at`
+- 错误场景（示例）：
+  - sessionId 不存在或不属于当前用户：`404 NOT_FOUND`
+
+#### 4.5.4 `DELETE /api/ai/sessions/{sessionId}`（删除会话）
+
+- 鉴权：需登录
+- 操作策略：
+  - 软删除会话：写入 `deleted_at`
+  - 关联消息按实现策略软删或忽略（阶段默认要求不影响审计可追溯）
+- 响应结构：`ApiResponse<null>`
+- 错误场景（示例）：
+  - sessionId 不存在或不属于当前用户：`404 NOT_FOUND`
 
 ## 5. 引用来源格式
 
