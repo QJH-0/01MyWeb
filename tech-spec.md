@@ -82,8 +82,8 @@ flowchart TB
 |------|------|----------------|
 | primary / primary-light / primary-dark | 主色阶 | 莫兰迪青系，如 #7D9D9C、#9DB5B2、#5A7A79 |
 | secondary | 辅助 | 莫兰迪紫 #B8A9C9 |
-| accent | 强调 | 莫兰迪橙 #E6B8A2 |
-| bg-primary / bg-secondary / bg-card | 背景 | 米白 #F7F5F3、暖灰 #EDE8E3、卡片白 #FFFFFF |
+| accent | 强调 | 莫兰迪蓝青（冷调强调）#8FB6C9 |
+| bg-primary / bg-secondary / bg-card | 背景 | 冷调浅灰白 #F4F7F9、极淡冷灰 #E9F0F2、卡片白 #FFFFFF |
 | text-primary / secondary / muted | 文字 | #2C3E50、#5D6D7E、#95A5A6 |
 | border | 分割线 | #D5D5D5 |
 | success / warning / error | 功能色 | 与主色阶协调，避免高饱和 |
