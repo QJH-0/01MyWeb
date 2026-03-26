@@ -113,7 +113,8 @@ flowchart TB
 
 #### 3.1A.1 存储位置（权威）
 
-- Markdown 主源固定存放在 **GitHub 仓库**内（与代码同仓或独立内容仓均可，但首版默认同仓）。
+- Markdown 主源在项目仓库的 `content/` 目录（开发/测试默认作为权威源）。
+  - 生产模式下可切换为以 GitHub 内容仓为权威源（并启用写回）。
 - 固定目录约定（首版强制）：
   - `content/blog/`：博客文章（每篇一个 `.md` 文件）
   - `content/projects/`：项目条目（每个项目一个 `.md` 文件）
@@ -135,11 +136,13 @@ flowchart TB
 
 > 说明：MySQL/Elasticsearch 的内容字段均由 Markdown 解析生成；数据库不得反向覆盖 Markdown。
 
-#### 3.1A.3 后台写入 GitHub（强制）
+#### 3.1A.3 后台写入内容仓（强制）
 
-- 后台管理端对“创建/编辑/发布/取消发布”的最终落地形式：**通过 GitHub API 写入/更新对应 Markdown 文件**（提交到固定分支）。
-- 认证方式：使用 GitHub Token（仅环境变量注入，禁止入库）。
-- 固定环境变量（命名可在实现阶段落到 `.env.example`，但必须存在等价项）：
+- 后台管理端对“创建/编辑/发布/取消发布”的最终落地形式：
+  - 开发/测试：直接写入本地 `content/` 目录（文件名/目录结构按固定约定）。
+  - 生产：通过 GitHub API 写入/更新对应 Markdown 文件（提交到固定分支）。
+- 认证方式（生产生效）：使用 GitHub Token（仅环境变量注入，禁止入库）。
+- 固定环境变量（由 `.env`/部署环境注入，禁止入库；开发/测试可不需要）：
   - `GITHUB_CONTENT_OWNER`
   - `GITHUB_CONTENT_REPO`
   - `GITHUB_CONTENT_BRANCH`（默认 `main`）
@@ -149,7 +152,7 @@ flowchart TB
 #### 3.1A.4 同步触发与一致性口径（强制）
 
 - 触发：仅在后台“发布/更新内容”时触发同步（受控）。
-- 顺序：写 GitHub 成功 → 解析 Markdown → 写 MySQL（结构化）+ Outbox → 异步写 ES（全文/向量）。
+- 顺序：写入内容仓成功（本地或 GitHub，取决于运行环境）→ 解析 Markdown → 写 MySQL（结构化）+ Outbox → 异步写 ES（全文/向量）。
 - 失败：自动重试 3 次（指数退避），仍失败记录待补偿任务；允许最终一致。
 - 可见性：目标约 `10s` 内可被搜索/检索到（以实现为准）。
 
@@ -270,7 +273,9 @@ flowchart TB
 - 接口契约统一以 `docs/开发文档/API文档与系统架构.md` 为准，本文档不再重复维护 URL/方法/字段细节。
 - 当前固定口径（必须与契约文档一致）：
   - 统一响应：`ApiResponse<T>`（含 `success/data/error/timestamp/traceId`）。
-  - 管理鉴权：`X-Admin-Token`（作用于 `/api/admin/**`）。
+  - 管理鉴权：`/api/admin/**` 需同时满足：
+    - `Authorization: Bearer <accessToken>` 且具备 `ROLE_ADMIN`
+    - 额外请求头 `X-Admin-Token`
   - AI 流式接口：`GET /api/ai/chat/stream`（SSE 事件仅 `delta/done/error`）。
   - 分页默认：`page=0`、`limit=10`。
 - 安全基线：接口限流、CORS 白名单、上传类型与大小校验；联系表单可启用分层防刷（honeypot + rate limit，必要时验证码）。
@@ -339,14 +344,6 @@ Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `
 - `vue`、`vue-router`、`pinia`、`axios`、`element-plus`、`gsap`、`marked`、`highlight.js` 使用当前文档定义的锁定版本；`vite`、`@vitejs/plugin-vue`、`sass`、`typescript` 置于开发依赖并锁定。  
 - 锁文件（pnpm/npm/yarn）纳入版本控制，保证可复现构建。  
 
-### 5.4 版本核对结论（本次更新）
-
-- Context7 显示：Spring Boot 文档存在 `v3.5.9` 与 `v4.0.x` 线；本项目基线继续锁定 `3.5.12`，不自动迁移 4.x。
-- Context7 显示：Spring AI Alibaba `v1.1.2.2` 可用，继续锁定。
-- 联网结果显示：Spring Boot 4.0.4、Elasticsearch 9.x、Vue 3.5.30、Vite 8.0.2 已有更新/发布信息；本项目按“完全锁定版本”策略不自动升级。
-
----
-
 ## 六、注意事项
 
 1. **Elasticsearch**：堆内存与宿主机留余量；生产开启安全特性，与「关闭安全仅开发」的 Compose 示例区分。  
@@ -358,14 +355,14 @@ Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `
 
 ---
 
-## 七、文档执行口径映射（2026-03-24）
+## 七、文档执行口径映射（当前口径）
 
 本节用于将技术规范与执行文档统一，避免“规范已定义但落地步骤不一致”。
 
 ### 7.1 模块推进映射
 
 - 模块顺序统一采用：`M0 -> M1 -> M2 -> M3 -> M4 -> M5 -> M6 -> M7 -> M8`。
-- 每阶段实施入口统一为 `docs/开发文档/00-开发文档导航.md` 对应文档。
+- 每阶段实施入口统一为 `docs/开发文档/00E-执行总控看板（唯一入口）.md` 对应文档。
 - 技术规范负责“怎么做”，阶段文档负责“先做什么、如何验收”。
 
 ### 7.2 统一 DoD 与测试门槛

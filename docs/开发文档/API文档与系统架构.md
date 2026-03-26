@@ -37,7 +37,7 @@
 | 评论列表查看 | 匿名可访问 | 无需登录 |
 | AI 助手会话（含 SSE） | 登录用户 | 需 `ROLE_USER` 或 `ROLE_ADMIN` |
 | 评论创建/回复/点赞 | 登录用户 | 不允许匿名评论 |
-| 后台管理接口（`/api/admin/**`） | 管理员 | 需 `ROLE_ADMIN` |
+| 后台管理接口（`/api/admin/**`） | 管理员 | 需 `ROLE_ADMIN` 且携带 `X-Admin-Token` |
 
 ## 1.2 认证接口（固定）
 
@@ -49,7 +49,7 @@
 - 反滥用要求（注册必须实现）：
   - IP 维度注册频控（滑动窗口）
   - 用户名去重 + 弱口令拒绝
-  - 图形验证码或行为验证码（二选一，默认启用）
+  - 行为验证码（Turnstile 风格，可配置回退；默认启用）
 
 2) `POST /api/auth/login`  
 - 请求体：
@@ -102,7 +102,7 @@
 
 ### 2.3 项目（管理，分页默认：`page=0`，`limit=10`）
 
-公共要求：请求头需携带 `Authorization: Bearer <accessToken>` 且具备 `ROLE_ADMIN`
+公共要求：请求头需携带 `Authorization: Bearer <accessToken>` 且具备 `ROLE_ADMIN`，并携带 `X-Admin-Token`
 
 1) `GET /api/admin/projects`  
 - 查询参数：
@@ -151,7 +151,7 @@
 
 ### 2.5 博客（管理，分页默认：`page=0`，`limit=10`）
 
-公共要求：请求头需携带 `Authorization: Bearer <accessToken>` 且具备 `ROLE_ADMIN`
+公共要求：请求头需携带 `Authorization: Bearer <accessToken>` 且具备 `ROLE_ADMIN`，并携带 `X-Admin-Token`
 
 1) `GET /api/admin/blogs`  
 - 查询参数：
@@ -204,7 +204,7 @@
 
 ### 2.7 搜索索引管理
 
-公共要求：请求头需携带 `Authorization: Bearer <accessToken>` 且具备 `ROLE_ADMIN`
+公共要求：请求头需携带 `Authorization: Bearer <accessToken>` 且具备 `ROLE_ADMIN`，并携带 `X-Admin-Token`
 
 1) `POST /api/admin/search/consume`  
 - 参数：无  

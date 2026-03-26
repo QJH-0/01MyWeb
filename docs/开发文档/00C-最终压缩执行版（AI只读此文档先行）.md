@@ -47,7 +47,7 @@
 - 基础路径：`/api`
 - 响应包装：`ApiResponse<T>`
 - 鉴权方案：`Spring Security + JWT`（`Authorization: Bearer <accessToken>`）
-- 权限边界：`/api/admin/**` 需 `ROLE_ADMIN`；`/api/ai/**` 与评论写接口需登录
+- 权限边界：`/api/admin/**` 需 `ROLE_ADMIN` 且携带 `X-Admin-Token`；`/api/ai/**` 与评论写接口需登录
 - AI 流式：`GET /api/ai/chat/stream`（SSE 仅 `delta/done/error`）
 - 分页默认：`page=0`、`limit=10`
 

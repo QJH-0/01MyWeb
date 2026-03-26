@@ -1,0 +1,160 @@
+---
+description: "TypeScript/JavaScript 专项规则（整合版）"
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.vue"
+alwaysApply: false
+---
+
+# TypeScript/JavaScript 专项规则
+
+> 本文件仅在 globs 匹配的文件上生效（用于承接原 `typescript-*` 规则）。
+
+## 一、编码规范（TypeScript/JavaScript）
+
+1. 不可变更新
+
+使用 spread operator 做不可变更新。
+
+```typescript
+// WRONG: Mutation
+function updateUser(user, name) {
+  user.name = name  // MUTATION!
+  return user
+}
+
+// CORRECT: Immutability
+function updateUser(user, name) {
+  return {
+    ...user,
+    name
+  }
+}
+```
+
+2. 错误处理
+
+使用 `async/await` 并配合 `try-catch`，在 catch 中抛出更清晰的用户级错误信息。
+
+```typescript
+try {
+  const result = await riskyOperation()
+  return result
+} catch (error) {
+  console.error('Operation failed:', error)
+  throw new Error('Detailed user-friendly message')
+}
+```
+
+3. 输入校验
+
+优先使用 Zod 进行 schema 校验。
+
+```typescript
+import { z } from 'zod'
+
+const schema = z.object({
+  email: z.string().email(),
+  age: z.number().int().min(0).max(150)
+})
+
+const validated = schema.parse(input)
+```
+
+4. `console.log`
+
+- 生产代码禁止直接使用 `console.log`
+- 用合适的 logging 库替代
+- 需要可自动检测时参考 hooks 规则
+
+## 二、Hooks（TypeScript/JavaScript）
+
+1. PostToolUse Hooks（在会话配置中启用）
+   - Prettier：编辑后自动格式化 JS/TS
+   - TypeScript check：编辑后对 `.ts`/`.tsx` 运行 `tsc`
+   - `console.log` warning：对变更文件里的 `console.log` 给出告警
+2. Stop Hooks
+   - `console.log audit`：会话结束前检查所有修改过的文件，是否还存在 `console.log`
+
+## 三、工程模式（Patterns）
+
+1. API 响应格式（示例）
+
+```typescript
+interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+  meta?: {
+    total: number
+    page: number
+    limit: number
+  }
+}
+```
+
+2. Vue Composable 模式（示例）
+
+```typescript
+import { ref, watch, type Ref } from 'vue'
+
+export function useDebounce<T>(value: Ref<T>, delay = 300) {
+  const debounced = ref(value.value) as Ref<T>
+  let timer: ReturnType<typeof setTimeout> | null = null
+
+  watch(value, (next) => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => {
+      debounced.value = next
+    }, delay)
+  })
+
+  return debounced
+}
+```
+
+3. Repository Pattern（示例）
+
+```typescript
+interface Repository<T> {
+  findAll(filters?: Filters): Promise<T[]>
+  findById(id: string): Promise<T | null>
+  create(data: CreateDto): Promise<T>
+  update(id: string, data: UpdateDto): Promise<T>
+  delete(id: string): Promise<void>
+}
+```
+
+## 四、安全（TypeScript/JavaScript）
+
+1. Secret 管理（示例）
+
+```typescript
+// NEVER: Hardcoded secrets
+const apiKey = "sk-proj-xxxxx"
+
+// ALWAYS: Environment variables
+const apiKey = process.env.OPENAI_API_KEY
+
+if (!apiKey) {
+  throw new Error('OPENAI_API_KEY not configured')
+}
+```
+
+2. Agent 支持
+
+- 使用 `security-reviewer` 进行安全审计（覆盖到实现细节与依赖风险）
+
+## 五、测试（TypeScript/JavaScript）
+
+1. E2E 测试
+
+使用 Playwright 作为关键用户流程的 E2E 框架。
+
+2. Agent 支持
+
+- `e2e-runner`：Playwright E2E 测试专员
+

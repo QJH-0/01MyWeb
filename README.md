@@ -31,7 +31,7 @@ docker compose up -d nginx
 
 ## 3. 启动后端
 
-1. 复制配置模板：`backend/.env.example`（按本机环境调整）
+1. 确保根目录 `.env` 已配置必要环境变量（不要提交真实密钥）。
 2. 启动应用：
 
 ```bash
@@ -43,7 +43,7 @@ mvn spring-boot:run
 
 ## 4. 启动前端
 
-1. 复制配置模板：`frontend/.env.example`
+1. 确保根目录 `.env` 已配置必要环境变量（前端构建时读取对应 `VITE_*` 配置）。
 2. 启动开发服务器：
 
 ```bash

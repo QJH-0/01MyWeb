@@ -39,7 +39,7 @@
 
 ### 2.5 AskUserQuestion 结果（已锁定）
 
-> 以下决策来自 2026-03-24 的结构化问卷，作为 M6 默认实现口径。
+> 以下为本项目当前锁定的默认实现口径（不再保留来源过程描述）。
 
 - 架构：`ChatClient + Agent Graph`（当前以 ChatClient 主流程交付，Graph 预留检查点持久化能力）
 - 短期记忆：`MessageWindowChatMemory + Summary`（窗口压缩并行，防止上下文膨胀）
@@ -85,29 +85,10 @@
 
 ## 4. SSE 事件协议
 
-### 4.1 事件类型
+### 4.1 事件协议（唯一契约引用）
 
-| 事件名 | 说明 | 数据格式 |
-|--------|------|----------|
-| delta | 流式输出片段 | `{ "content": "片段内容" }` |
-| done | 输出完成 | `{ "content": "完整内容", "sources": [...] }` |
-| error | 错误发生 | `{ "error": "错误信息" }` |
-
-### 4.2 流式响应格式
-
-```
-event: delta
-data: {"content": "你好"}
-
-event: delta
-data: {"content": "，我是"}
-
-event: delta
-data: {"content": "AI 助手"}
-
-event: done
-data: {"content": "你好，我是 AI 助手","sources":[{"sourceType":"blog","sourceId":1,"title":"博客标题","url":"/blog/1"}]}
-```
+- SSE 事件名与语义：以 `API文档与系统架构.md` 的 `GET /api/ai/chat/stream` 为准（仅 `delta/done/error`）。
+- 本文件不再定义 SSE `data:` 的 JSON 结构，避免与唯一契约产生二次定义冲突。
 
 ### 4.3 接口契约
 
@@ -140,11 +121,7 @@ data: {"content": "你好，我是 AI 助手","sources":[{"sourceType":"blog","s
 
 ### 4.4 错误响应
 
-| 场景 | 错误码 | HTTP 状态码 |
-|------|--------|-------------|
-| 消息为空 | `BAD_REQUEST` | 400 |
-| 会话不存在 | `NOT_FOUND` | 404 |
-| 模型调用失败 | `INTERNAL_ERROR` | 500 |
+- 错误返回结构与 HTTP 状态码口径：统一以 `API文档与系统架构.md` 为准，本文件不再维护“错误码表/状态码表”以避免冲突。
 
 ## 5. 引用来源格式
 
