@@ -281,7 +281,8 @@ class AuthControllerTest {
                         .header("X-Admin-Token", securityProperties.admin().token()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").value("admin-ok"));
+                .andExpect(jsonPath("$.data.list").isArray())
+                .andExpect(jsonPath("$.data.total").isNumber());
     }
 
     @Test

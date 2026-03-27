@@ -11,11 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class TestRbacController {
-    @GetMapping("/admin/projects")
-    public ApiResponse<String> adminProjects(HttpServletRequest request) {
-        return ApiResponse.ok("admin-ok", traceId(request));
-    }
-
     @GetMapping("/ai/chat/stream")
     public ApiResponse<String> aiChatStream(HttpServletRequest request) {
         return ApiResponse.ok("ai-ok", traceId(request));
