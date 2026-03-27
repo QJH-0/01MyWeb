@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS project (
     deleted_at DATETIME NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_project_category ON project (category);
-CREATE INDEX IF NOT EXISTS idx_project_visible ON project (visible);
-CREATE INDEX IF NOT EXISTS idx_project_sort_order ON project (sort_order);
+CREATE INDEX idx_project_category ON project (category);
+CREATE INDEX idx_project_visible ON project (visible);
+CREATE INDEX idx_project_sort_order ON project (sort_order);
 
 CREATE TABLE IF NOT EXISTS project_tag (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -25,6 +25,6 @@ CREATE TABLE IF NOT EXISTS project_tag (
     CONSTRAINT fk_project_tag_project_id FOREIGN KEY (project_id) REFERENCES project (id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_project_tag_project_id ON project_tag (project_id);
-CREATE INDEX IF NOT EXISTS idx_project_tag_tag ON project_tag (tag);
+CREATE INDEX idx_project_tag_project_id ON project_tag (project_id);
+CREATE INDEX idx_project_tag_tag ON project_tag (tag);
 
