@@ -61,6 +61,39 @@ body {
   gap: 14px;
 }
 
+.nav-toggle {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.nav-toggle:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 116, 163, 0.18);
+}
+
+.nav-toggle__icon {
+  width: 16px;
+  height: 10px;
+  display: block;
+  background:
+    linear-gradient(var(--text-secondary), var(--text-secondary)) 0 0 / 100% 2px no-repeat,
+    linear-gradient(var(--text-secondary), var(--text-secondary)) 0 50% / 100% 2px no-repeat,
+    linear-gradient(var(--text-secondary), var(--text-secondary)) 0 100% / 100% 2px no-repeat;
+}
+
+.nav-toggle__label {
+  font-size: 13px;
+}
+
 .topnav a {
   color: var(--text-secondary);
   text-decoration: none;
@@ -371,6 +404,41 @@ h1 {
     padding: 12px 14px;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .whoami {
+    order: 3;
+    width: 100%;
+  }
+
+  .topnav {
+    order: 4;
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 14px;
+  }
+
+  .topnav.open {
+    display: flex;
+  }
+
+  .topnav a {
+    padding: 10px 10px;
+    border-radius: 12px;
+    background: rgba(79, 116, 163, 0.04);
+  }
+
+  .topnav a.router-link-active {
+    background: rgba(79, 116, 163, 0.12);
   }
 
   .app-main {

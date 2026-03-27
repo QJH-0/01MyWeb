@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
 const route = useRoute()
 const authStore = useAuthStore()
+const navOpen = ref(false)
 
 const username = computed(() => authStore.profile?.username ?? '')
+
+watch(
+  () => route.fullPath,
+  () => {
+    navOpen.value = false
+  },
+)
 
 const links = computed(() => {
   const mainLinks = [
@@ -31,7 +39,18 @@ const links = computed(() => {
   <header class="topbar">
     <router-link to="/" class="brand">MyWeb</router-link>
 
-    <nav class="topnav" aria-label="主导航">
+    <button
+      class="nav-toggle"
+      type="button"
+      :aria-expanded="navOpen"
+      aria-controls="primary-nav"
+      @click="navOpen = !navOpen"
+    >
+      <span class="nav-toggle__icon" aria-hidden="true" />
+      <span class="nav-toggle__label">{{ navOpen ? '收起' : '菜单' }}</span>
+    </button>
+
+    <nav id="primary-nav" class="topnav" :class="{ open: navOpen }" aria-label="主导航">
       <router-link
         v-for="link in links"
         :key="link.to"
