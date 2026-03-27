@@ -213,6 +213,7 @@ alwaysApply: true
    - e2e-runner：E2E 测试（关键流程）
    - refactor-cleaner：清理无用代码
    - doc-updater：文档更新
+   - git-committer：Git 提交执行（标准化 commit 流程与提交信息）
 2. 何时直接调用（无需用户提示）
    - 复杂功能：`planner`
    - 刚修改/刚写完代码：`code-reviewer`
@@ -221,6 +222,7 @@ alwaysApply: true
    - 涉及后端构建失败：优先 `java-build-resolver`
    - 缺陷修复/新功能：`tdd-guide`
    - 架构决策：`architect`
+   - 变更已通过测试且准备提交：`git-committer`
 3. 并行任务执行
    - 使用并行 agents 处理彼此独立的工作
 4. 多视角分析
@@ -239,3 +241,15 @@ alwaysApply: true
 3. 交付前必须执行前端一致性自检
    - 检查主题/配色一致、排版层级一致、状态样式完整（hover/active/disabled/error）
    - 检查响应式与可访问性（键盘可达、语义结构、对比度）是否达标
+
+## 十五、通用代码风格（精简版）
+
+1. 命名：类/类型 `PascalCase`；方法/变量 `lowerCamelCase`；常量 `UPPER_SNAKE_CASE`；测试以 `Test` 结尾
+2. 导入：Java 禁止通配符导入；TypeScript 禁止未使用导入，保持分组与可读性
+3. 结构与格式：保持 UTF-8、去行尾多余空白；遵循模板元素顺序（package/import/单一顶层类等）
+4. 错误处理：对外返回通用错误信息/错误码；服务端通过日志记录详细上下文并包含 `traceId`，避免泄露堆栈/SQL/路径
+5. 生产限制：生产代码禁止无审计的 `console.log` 或直接打印堆栈
+
+参考（原则来源）：
+- Google Java Style：https://google.github.io/styleguide/javaguide.html
+- OWASP 错误处理：https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html

@@ -50,3 +50,11 @@ alwaysApply: false
 3. 涉及 SQL / schema / 索引：`database-reviewer`
 4. 涉及安全输入边界：`security-reviewer`
 
+## 六、Java 风格（精简版）
+
+1. 命名：类/接口/枚举 `UpperCamelCase`；方法/变量 `lowerCamelCase`；常量 `UPPER_SNAKE_CASE`；测试以 `Test` 结尾
+2. 导入：禁止通配符导入（`import ...*`），显式 import
+3. 文件：UTF-8；去行尾多余空白；遵循模板元素顺序（package/import/单一顶层类）
+
+参考：Google Java Style：https://google.github.io/styleguide/javaguide.html
+
