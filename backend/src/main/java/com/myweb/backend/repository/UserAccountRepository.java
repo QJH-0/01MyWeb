@@ -1,15 +1,13 @@
 package com.myweb.backend.repository;
 
-import com.myweb.backend.entity.UserAccount;
+import com.myweb.backend.entity.UserAccountEntity;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-public interface UserAccountRepository {
-    Optional<UserAccount> findByUsername(String username);
-
-    Optional<UserAccount> findById(long userId);
-
-    UserAccount save(String username, String passwordHash);
-
-    UserAccount saveAdminIfAbsent(String username, String passwordHash);
+@Repository
+public interface UserAccountRepository extends JpaRepository<UserAccountEntity, Long> {
+    Optional<UserAccountEntity> findByUsername(String username);
 }

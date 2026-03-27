@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { fetchHealth, type HealthStatus } from '../api/health'
+import { useAuthStore } from '../stores/auth'
 
 const loading = ref(true)
 const error = ref<string | null>(null)
 const traceId = ref('')
 const health = ref<HealthStatus | null>(null)
+const router = useRouter()
+const authStore = useAuthStore()
 
 async function loadHealth() {
   loading.value = true
@@ -45,6 +49,12 @@ onMounted(loadHealth)
       </div>
 
       <p v-if="traceId" class="trace">traceId: {{ traceId }}</p>
+      <div class="action-row">
+        <button v-if="authStore.isAuthenticated" class="submit-btn" @click="router.push('/profile')">
+          进入账户中心
+        </button>
+        <button v-else class="submit-btn" @click="router.push('/login')">前往登录</button>
+      </div>
     </section>
   </main>
 </template>

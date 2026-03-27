@@ -1,5 +1,16 @@
 spring:
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3307/myweb?useSSL=false&serverTimezone=UTC}
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3307/myweb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
     username: ${MYSQL_USER:myweb}
     password: ${MYSQL_PASSWORD:myweb}
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+app:
+  security:
+    captcha:
+      required: false

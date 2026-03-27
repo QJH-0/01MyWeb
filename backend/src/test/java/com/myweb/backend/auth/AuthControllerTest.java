@@ -63,7 +63,8 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.username").value("m0_user"))
-                .andExpect(jsonPath("$.data.roles[0]").value("ROLE_USER"));
+                .andExpect(jsonPath("$.data.roles").isArray())
+                .andExpect(jsonPath("$.data.roles").value(org.hamcrest.Matchers.hasItem("ROLE_USER")));
 
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -95,7 +96,7 @@ class AuthControllerTest {
                                 }
                                 """.formatted(refreshToken)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("UNAUTHORIZED"));
+                .andExpect(jsonPath("$.error").value("AUTH_INVALID_REFRESH_TOKEN"));
     }
 
     @Test
@@ -110,7 +111,42 @@ class AuthControllerTest {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.error").value("AUTH_CAPTCHA_INVALID"));
+    }
+
+    @Test
+    void shouldRejectInvalidCredentials() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"not_exists",
+                                  "password":"wrongPass123"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("AUTH_INVALID_CREDENTIALS"));
+    }
+
+    @Test
+    void shouldRejectDuplicateUsername() throws Exception {
+        String payload = """
+                {
+                  "username":"dup_user",
+                  "password":"Passw0rd123",
+                  "captchaToken":"captcha-ok"
+                }
+                """;
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("AUTH_USERNAME_EXISTS"));
     }
 
     @Test

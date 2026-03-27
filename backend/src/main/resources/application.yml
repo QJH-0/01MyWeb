@@ -1,6 +1,17 @@
 spring:
   application:
     name: myweb-backend
+  profiles:
+    default: dev
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  sql:
+    init:
+      mode: never
+  flyway:
+    enabled: true
 
 server:
   port: 8080
@@ -10,7 +21,7 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   security:
     jwt:
-      secret: ${APP_JWT_SECRET}
+      secret: ${APP_JWT_SECRET:myweb-dev-jwt-secret-change-this-to-a-long-random-value}
       access-token-ttl-seconds: ${APP_JWT_ACCESS_TTL_SECONDS:86400}
       refresh-token-ttl-seconds: ${APP_JWT_REFRESH_TTL_SECONDS:604800}
     captcha:
@@ -21,7 +32,7 @@ app:
     login:
       ip-limit-per-minute: ${APP_LOGIN_IP_LIMIT_PER_MINUTE:20}
     admin:
-      token: ${APP_ADMIN_TOKEN}
+      token: ${APP_ADMIN_TOKEN:myweb-dev-admin-token-change-this}
       bootstrap-username: ${APP_ADMIN_BOOTSTRAP_USERNAME:}
       bootstrap-password: ${APP_ADMIN_BOOTSTRAP_PASSWORD:}
   probes:
