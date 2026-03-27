@@ -2,6 +2,7 @@ package com.myweb.backend.auth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.myweb.backend.config.SecurityProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,6 +24,8 @@ class AuthControllerTest {
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private SecurityProperties securityProperties;
 
     @Test
     void shouldRegisterLoginAndGetMe() throws Exception {
@@ -65,6 +68,14 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.data.username").value("m0_user"))
                 .andExpect(jsonPath("$.data.roles").isArray())
                 .andExpect(jsonPath("$.data.roles").value(org.hamcrest.Matchers.hasItem("ROLE_USER")));
+
+        mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.permissions").isArray())
+                .andExpect(jsonPath("$.data.permissions").value(org.hamcrest.Matchers.hasItem("PERM_AI_ACCESS")))
+                .andExpect(jsonPath("$.data.permissions").value(org.hamcrest.Matchers.hasItem("PERM_COMMENT_WRITE")));
 
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -179,5 +190,136 @@ class AuthControllerTest {
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("FORBIDDEN"));
+    }
+
+    @Test
+    void shouldDenyAdminEndpointForUserRoleEvenWithAdminTokenHeader() throws Exception {
+        String username = "normal_user";
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"%s",
+                                  "password":"Passw0rd123",
+                                  "captchaToken":"captcha-ok"
+                                }
+                                """.formatted(username)))
+                .andExpect(status().isOk());
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"%s",
+                                  "password":"Passw0rd123"
+                                }
+                                """.formatted(username)))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode body = objectMapper.readTree(loginResult.getResponse().getContentAsString());
+        String accessToken = body.at("/data/accessToken").asText();
+
+        mockMvc.perform(get("/api/admin/projects")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .header("X-Admin-Token", securityProperties.admin().token()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("FORBIDDEN"));
+    }
+
+    @Test
+    void shouldAuthorizeAiEndpointForUserWithRbac() throws Exception {
+        String username = "ai_user";
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"%s",
+                                  "password":"Passw0rd123",
+                                  "captchaToken":"captcha-ok"
+                                }
+                                """.formatted(username)))
+                .andExpect(status().isOk());
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"%s",
+                                  "password":"Passw0rd123"
+                                }
+                                """.formatted(username)))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode body = objectMapper.readTree(loginResult.getResponse().getContentAsString());
+        String accessToken = body.at("/data/accessToken").asText();
+
+        mockMvc.perform(get("/api/ai/chat/stream")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("X-Trace-Id"))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").value("ai-ok"));
+    }
+
+    @Test
+    void shouldAllowAdminEndpointWhenAdminTokenProvided() throws Exception {
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"admin",
+                                  "password":"Admin12345"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode body = objectMapper.readTree(loginResult.getResponse().getContentAsString());
+        String accessToken = body.at("/data/accessToken").asText();
+
+        mockMvc.perform(get("/api/admin/projects")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .header("X-Admin-Token", securityProperties.admin().token()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").value("admin-ok"));
+    }
+
+    @Test
+    void shouldAuthorizeCommentWriteForUserWithRbac() throws Exception {
+        String username = "comment_user";
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"%s",
+                                  "password":"Passw0rd123",
+                                  "captchaToken":"captcha-ok"
+                                }
+                                """.formatted(username)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/comments/test"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("UNAUTHORIZED"));
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"%s",
+                                  "password":"Passw0rd123"
+                                }
+                                """.formatted(username)))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode body = objectMapper.readTree(loginResult.getResponse().getContentAsString());
+        String accessToken = body.at("/data/accessToken").asText();
+
+        mockMvc.perform(post("/api/comments/test")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").value("comment-write-ok"));
     }
 }

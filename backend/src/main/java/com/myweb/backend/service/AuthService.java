@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -36,6 +35,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final SecurityProperties securityProperties;
+    private final RbacAuthorizationService rbacAuthorizationService;
     private final ConcurrentMap<String, RefreshTokenRecord> refreshTokens = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, RegisterWindow> registerWindows = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, RegisterWindow> loginWindows = new ConcurrentHashMap<>();
@@ -44,12 +44,14 @@ public class AuthService {
             UserAccountRepository userAccountRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            SecurityProperties securityProperties
+            SecurityProperties securityProperties,
+            RbacAuthorizationService rbacAuthorizationService
     ) {
         this.userAccountRepository = userAccountRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.securityProperties = securityProperties;
+        this.rbacAuthorizationService = rbacAuthorizationService;
     }
 
     @PostConstruct
@@ -95,18 +97,40 @@ public class AuthService {
     }
 
     public MeResponse me(AuthenticatedUser user) {
+        Set<String> roles = user.getAuthorities().stream()
+                .map(Objects::toString)
+                .filter(auth -> auth.startsWith("ROLE_"))
+                .collect(Collectors.toUnmodifiableSet());
+
+        Set<String> permissions = user.getAuthorities().stream()
+                .map(Objects::toString)
+                .filter(auth -> auth.startsWith("PERM_"))
+                .collect(Collectors.toUnmodifiableSet());
         return new MeResponse(
                 user.userId(),
                 user.getUsername(),
-                user.getAuthorities().stream().map(Objects::toString).collect(java.util.stream.Collectors.toUnmodifiableSet())
+                roles,
+                permissions
         );
     }
 
     private AuthTokenResponse issueTokens(UserAccountEntity account) {
+        RbacAuthorizationService.UserRbacAuthorities authorities =
+                rbacAuthorizationService.loadAuthorities(account.getUserId());
+
+        if (authorities.roleAuthorities().isEmpty() || authorities.permissionAuthorities().isEmpty()) {
+            throw new ApiException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ErrorCodes.INTERNAL_ERROR,
+                    "rbac authorities not configured"
+            );
+        }
+
         String accessToken = jwtService.generateAccessToken(
                 account.getUserId(),
                 account.getUsername(),
-                parseRoles(account.getRoles())
+                authorities.roleAuthorities(),
+                authorities.permissionAuthorities()
         );
         String refreshToken = UUID.randomUUID().toString();
         long expiresIn = securityProperties.jwt().accessTokenTtlSeconds();
@@ -121,25 +145,32 @@ public class AuthService {
         UserAccountEntity entity = new UserAccountEntity();
         entity.setUsername(username);
         entity.setPasswordHash(passwordHash);
-        entity.setRoles("ROLE_USER");
         try {
-            return userAccountRepository.saveAndFlush(entity);
+            UserAccountEntity saved = userAccountRepository.saveAndFlush(entity);
+            rbacAuthorizationService.assignRoleToUser(saved.getUserId(), "ROLE_USER");
+            return saved;
         } catch (DataIntegrityViolationException ex) {
             throw authValidation(ErrorCodes.AUTH_USERNAME_EXISTS, "username already exists");
         }
     }
 
+    @Transactional
     private UserAccountEntity saveAdminIfAbsent(String username, String passwordHash) {
         Optional<UserAccountEntity> existing = userAccountRepository.findByUsername(username);
         if (existing.isPresent()) {
-            return existing.get();
+            UserAccountEntity account = existing.get();
+            rbacAuthorizationService.assignRoleToUser(account.getUserId(), "ROLE_ADMIN");
+            rbacAuthorizationService.assignRoleToUser(account.getUserId(), "ROLE_USER");
+            return account;
         }
         UserAccountEntity entity = new UserAccountEntity();
         entity.setUsername(username);
         entity.setPasswordHash(passwordHash);
-        entity.setRoles("ROLE_ADMIN,ROLE_USER");
         try {
-            return userAccountRepository.saveAndFlush(entity);
+            UserAccountEntity saved = userAccountRepository.saveAndFlush(entity);
+            rbacAuthorizationService.assignRoleToUser(saved.getUserId(), "ROLE_ADMIN");
+            rbacAuthorizationService.assignRoleToUser(saved.getUserId(), "ROLE_USER");
+            return saved;
         } catch (DataIntegrityViolationException ex) {
             return userAccountRepository.findByUsername(username)
                     .orElseThrow(() -> new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.INTERNAL_ERROR, "failed to persist user"));
@@ -207,16 +238,6 @@ public class AuthService {
 
     private ApiException authValidation(String errorCode, String message) {
         return new ApiException(HttpStatus.BAD_REQUEST, errorCode, message);
-    }
-
-    private static Set<String> parseRoles(String rolesValue) {
-        if (rolesValue == null || rolesValue.isBlank()) {
-            return Set.of("ROLE_USER");
-        }
-        return Arrays.stream(rolesValue.split(","))
-                .map(String::trim)
-                .filter(value -> !value.isBlank())
-                .collect(Collectors.toUnmodifiableSet());
     }
 
     private record RefreshTokenRecord(long userId, Instant expiresAt) {

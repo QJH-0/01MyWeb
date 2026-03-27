@@ -65,13 +65,19 @@ public class JwtService {
         return keyBytes;
     }
 
-    public String generateAccessToken(long userId, String username, Set<String> roles) {
+    public String generateAccessToken(
+            long userId,
+            String username,
+            Set<String> roles,
+            Set<String> permissions
+    ) {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(accessTokenTtlSeconds);
         return Jwts.builder()
                 .subject(username)
                 .claim("uid", userId)
                 .claim("roles", roles)
+                .claim("permissions", permissions)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(exp))
                 .signWith(key)

@@ -81,7 +81,7 @@
 
 5) `GET /api/auth/me`  
 - 请求头：`Authorization: Bearer <accessToken>`
-- 响应：`ApiResponse<{ userId: number, username: string, roles: string[] }>`
+- 响应：`ApiResponse<{ userId: number, username: string, roles: string[], permissions: string[] }>`
 
 ## 2. API清单（URL + 参数）
 

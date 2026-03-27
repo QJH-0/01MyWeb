@@ -40,6 +40,7 @@ async function logout() {
           <p>用户 ID: <strong>{{ authStore.profile.userId }}</strong></p>
           <p>用户名: <strong>{{ authStore.profile.username }}</strong></p>
           <p>角色: <strong>{{ authStore.profile.roles.join(', ') }}</strong></p>
+          <p>权限: <strong>{{ authStore.profile.permissions.join(', ') }}</strong></p>
         </div>
         <div class="action-row">
           <button class="ghost-btn" @click="router.push('/')">返回首页</button>

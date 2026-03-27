@@ -26,6 +26,7 @@ export interface MeResponse {
   userId: number
   username: string
   roles: string[]
+  permissions: string[]
 }
 
 export async function register(payload: RegisterRequest) {

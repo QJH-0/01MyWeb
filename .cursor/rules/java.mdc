@@ -1,8 +1,10 @@
 ---
-description: "Java/Spring 后端专项规则（01MyWeb）"
+description: "Java/Spring 后端专项规则（通用）"
 globs:
   - "**/*.java"
   - "**/pom.xml"
+  - "**/build.gradle"
+  - "**/build.gradle.kts"
   - "**/application*.yml"
   - "**/application*.yaml"
 alwaysApply: false
@@ -10,7 +12,7 @@ alwaysApply: false
 
 # Java/Spring 专项规则
 
-> 本文件用于 01MyWeb 后端（Spring Boot 3.5.x + Java 21 + Maven）。
+> 本文件用于 Java/Spring 后端通用规范（适配 Spring Boot/Spring Framework 常见项目形态）。
 
 ## 一、代码与分层规范
 
@@ -19,36 +21,36 @@ alwaysApply: false
 3. Service 负责业务编排与事务边界
 4. Repository 仅做数据访问，不写业务规则
 5. 统一响应体与错误处理，返回中包含 `traceId`
+6. 依赖注入统一采用构造器注入，依赖字段尽量使用 `final`，避免字段注入与 `@Autowired` 在属性上的直接使用
+7. 按业务域（feature/domain）组织包结构优先于按纯技术层组织，确保每个模块高内聚、易拆分
+8. API DTO 与 JPA Entity 严格分离，禁止直接对外暴露持久化实体
 
 ## 二、接口与安全
 
 1. 所有对外接口必须做参数校验（`@Valid` + 约束注解）
 2. 错误响应禁止暴露堆栈、SQL、内部路径等敏感细节
 3. Secrets 只允许环境变量注入，禁止硬编码
-4. 与 GitHub/DashScope/MinIO 等外部服务交互时，必须做超时、重试、降级
+4. 与外部服务交互时，必须做超时、重试、降级（按场景选择重试策略与熔断/隔离）
 5. 对写操作接口补充鉴权和限流策略（按阶段落地）
+6. 认证与鉴权必须基于 Spring Security 官方能力实现，不自研一套认证框架或手写密码校验/会话管理
 
 ## 三、数据库与检索
 
 1. SQL 使用参数化查询，禁止字符串拼接
-2. 涉及 MySQL + Elasticsearch 一致性的写流程按规范执行（允许最终一致，不允许静默失败）
+2. 涉及多存储一致性的写流程需明确一致性模型（允许最终一致，但不允许静默失败）
 3. 关键查询必须评估索引命中和 N+1 风险
 4. 变更数据模型时同步更新迁移脚本与文档状态
 
 ## 四、测试与构建
 
 1. 新增/修改后端能力默认遵循 TDD（RED -> GREEN -> REFACTOR）
-2. 后端最小验证命令：
-   - `mvn -B test`
-   - 需要联调时：`mvn spring-boot:run`
+2. 后端最小验证：运行单元/集成测试；需要联调时启动应用并做关键路径回归
 3. 失败处理原则：先修复构建/测试阻断，再继续功能迭代
 
-## 五、Agent 协作建议（后端）
+## 五、交付门禁（后端）
 
-1. 后端代码审查：`java-reviewer`
-2. Java/Maven 构建问题：`java-build-resolver`
-3. 涉及 SQL / schema / 索引：`database-reviewer`
-4. 涉及安全输入边界：`security-reviewer`
+1. 变更需通过：编译 + 单元/集成测试（必要时补关键路径回归）
+2. 安全基线：输入校验、鉴权、错误响应不泄露、敏感信息不落日志
 
 ## 六、Java 风格（精简版）
 
@@ -57,4 +59,14 @@ alwaysApply: false
 3. 文件：UTF-8；去行尾多余空白；遵循模板元素顺序（package/import/单一顶层类）
 
 参考：Google Java Style：https://google.github.io/styleguide/javaguide.html
+
+## 七、日志与异常处理（精简版）
+
+1. 异常处理：通过 `@RestControllerAdvice`/`@ControllerAdvice` + `@ExceptionHandler` 统一收口错误响应；控制器保持“happy-path”，禁止吞错
+2. 日志分级：DEBUG 用于调试细节（SQL、payload 等，默认关闭生产）；INFO 记录关键业务流与重要事件；WARN 记录可恢复但异常的情况；ERROR 记录导致操作失败的错误
+3. 关联 ID：通过 MDC/`traceId` 贯穿请求链路，保证跨服务/线程可追踪；禁止在日志中输出密码、token、个人敏感信息
+
+参考：Spring Framework（异常处理）：https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-exceptionhandler.html
+参考：Spring `RestControllerAdvice` API：https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestControllerAdvice.html
+参考：Spring Security：https://docs.spring.io/spring-security/reference/
 

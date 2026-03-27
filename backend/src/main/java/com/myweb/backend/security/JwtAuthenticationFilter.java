@@ -15,18 +15,31 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+@Order(200)
+public class JwtAuthenticationFilter extends OncePerRequestFilter implements Ordered {
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtService jwtService;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(
+            JwtService jwtService
+    ) {
         this.jwtService = jwtService;
+    }
+
+    @Override
+    public int getOrder() {
+        // Used by Spring Security when positioning this filter via addFilterBefore/addFilterAfter.
+        return 200;
     }
 
     @Override
@@ -46,12 +59,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Claims claims = jwtService.parse(token);
             Object uidValue = claims.get("uid");
             Object rolesValue = claims.get("roles");
-            if (!(uidValue instanceof Number uidNumber) || !(rolesValue instanceof List<?> rolesRaw)) {
+                Object permissionsValue = claims.get("permissions");
+                if (!(uidValue instanceof Number uidNumber)) {
                 filterChain.doFilter(request, response);
                 return;
             }
-            List<SimpleGrantedAuthority> authorities = rolesRaw.stream()
+
+            Set<String> roleAuthorities = (rolesValue instanceof List<?> rolesRaw)
+                    ? rolesRaw.stream()
                     .map(String::valueOf)
+                    .map(String::trim)
+                    .filter(v -> !v.isBlank())
+                    .collect(Collectors.toUnmodifiableSet())
+                    : Set.of();
+
+            Set<String> permissionAuthorities = (permissionsValue instanceof List<?> permissionsRaw)
+                    ? permissionsRaw.stream()
+                    .map(String::valueOf)
+                    .map(String::trim)
+                    .filter(v -> !v.isBlank())
+                    .collect(Collectors.toUnmodifiableSet())
+                    : Set.of();
+
+            Set<String> allAuthorities = Stream.concat(roleAuthorities.stream(), permissionAuthorities.stream())
+                    .collect(Collectors.toUnmodifiableSet());
+
+            List<SimpleGrantedAuthority> authorities = allAuthorities.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
             AuthenticatedUser principal = new AuthenticatedUser(

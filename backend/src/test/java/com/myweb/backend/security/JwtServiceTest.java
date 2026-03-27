@@ -18,12 +18,18 @@ class JwtServiceTest {
     @Test
     void shouldGenerateAndParseTokenWhenSecretIsPlainText() {
         JwtService jwtService = new JwtService(buildProperties("this_is_a_plain_text_secret_key_32chars!!0000"));
-        String token = jwtService.generateAccessToken(1L, "demo", Set.of("ROLE_USER"));
+        String token = jwtService.generateAccessToken(
+                1L,
+                "demo",
+                Set.of("ROLE_USER"),
+                Set.of("PERM_AI_ACCESS")
+        );
         Claims claims = jwtService.parse(token);
 
         assertEquals("demo", claims.getSubject());
         assertEquals(1, claims.get("uid", Integer.class));
         assertIterableEquals(List.of("ROLE_USER"), claims.get("roles", List.class));
+        assertIterableEquals(List.of("PERM_AI_ACCESS"), claims.get("permissions", List.class));
     }
 
     @Test
@@ -32,12 +38,18 @@ class JwtServiceTest {
                 .encodeToString("this_is_a_plain_text_secret_key_32chars!!0000".getBytes(StandardCharsets.UTF_8));
         JwtService jwtService = new JwtService(buildProperties(base64Secret));
 
-        String token = jwtService.generateAccessToken(2L, "base64-user", Set.of("ROLE_USER"));
+        String token = jwtService.generateAccessToken(
+                2L,
+                "base64-user",
+                Set.of("ROLE_USER"),
+                Set.of("PERM_COMMENT_WRITE")
+        );
         Claims claims = jwtService.parse(token);
 
         assertEquals("base64-user", claims.getSubject());
         assertEquals(2, claims.get("uid", Integer.class));
         assertIterableEquals(List.of("ROLE_USER"), claims.get("roles", List.class));
+        assertIterableEquals(List.of("PERM_COMMENT_WRITE"), claims.get("permissions", List.class));
     }
 
     @Test
@@ -46,12 +58,18 @@ class JwtServiceTest {
                 .encodeToString("this_is_a_plain_text_secret_key_32chars!!0000".getBytes(StandardCharsets.UTF_8));
         JwtService jwtService = new JwtService(buildProperties(base64UrlSecret));
 
-        String token = jwtService.generateAccessToken(3L, "base64url-user", Set.of("ROLE_ADMIN"));
+        String token = jwtService.generateAccessToken(
+                3L,
+                "base64url-user",
+                Set.of("ROLE_ADMIN"),
+                Set.of("PERM_ADMIN_PANEL")
+        );
         Claims claims = jwtService.parse(token);
 
         assertEquals("base64url-user", claims.getSubject());
         assertEquals(3, claims.get("uid", Integer.class));
         assertIterableEquals(List.of("ROLE_ADMIN"), claims.get("roles", List.class));
+        assertIterableEquals(List.of("PERM_ADMIN_PANEL"), claims.get("permissions", List.class));
     }
 
     @Test

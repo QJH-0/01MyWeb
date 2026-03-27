@@ -15,154 +15,57 @@ alwaysApply: false
 
 ## 一、编码规范（TypeScript/JavaScript）
 
-1. 不可变更新
-
-使用 spread operator 做不可变更新。
-
-```typescript
-// WRONG: Mutation
-function updateUser(user, name) {
-  user.name = name  // MUTATION!
-  return user
-}
-
-// CORRECT: Immutability
-function updateUser(user, name) {
-  return {
-    ...user,
-    name
-  }
-}
-```
-
-2. 错误处理
-
-使用 `async/await` 并配合 `try-catch`，在 catch 中抛出更清晰的用户级错误信息。
-
-```typescript
-try {
-  const result = await riskyOperation()
-  return result
-} catch (error) {
-  console.error('Operation failed:', error)
-  throw new Error('Detailed user-friendly message')
-}
-```
-
-3. 输入校验
-
-优先使用 Zod 进行 schema 校验。
-
-```typescript
-import { z } from 'zod'
-
-const schema = z.object({
-  email: z.string().email(),
-  age: z.number().int().min(0).max(150)
-})
-
-const validated = schema.parse(input)
-```
-
-4. `console.log`
-
-- 生产代码禁止直接使用 `console.log`
-- 用合适的 logging 库替代
-- 需要可自动检测时参考 hooks 规则
+1. 不可变更新（默认）
+   - 优先使用不可变更新（spread / `Array#map`/`filter` 等），避免“原地修改”带来的隐藏副作用
+2. 错误处理（必须）
+   - `async/await` + 明确的错误边界；禁止静默吞错
+   - 对外抛出/返回用户可理解的信息；内部保留足够上下文用于排查（避免泄露敏感信息）
+3. 输入校验（必须）
+   - 有 schema 能力时优先用 schema（如 Zod）；校验失败要 fail fast
+4. 日志与调试输出（必须）
+   - 生产代码禁止 `console.log`/`console.debug`；如需日志，使用项目统一的 logging 方案或框架能力
 
 ## 二、Hooks（TypeScript/JavaScript）
 
-1. PostToolUse Hooks（在会话配置中启用）
-   - Prettier：编辑后自动格式化 JS/TS
-   - TypeScript check：编辑后对 `.ts`/`.tsx` 运行 `tsc`
-   - `console.log` warning：对变更文件里的 `console.log` 给出告警
-2. Stop Hooks
-   - `console.log audit`：会话结束前检查所有修改过的文件，是否还存在 `console.log`
+1. 自动化门禁（建议）
+   - 保存时自动格式化（Prettier）
+   - 提交前自动检查（ESLint、类型检查、测试按需启用）
+   - 禁止调试输出进入生产代码（如 `console.*`）
 
 ## 三、工程模式（Patterns）
 
-1. API 响应格式（示例）
-
-```typescript
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  error?: string
-  meta?: {
-    total: number
-    page: number
-    limit: number
-  }
-}
-```
-
-2. Vue Composable 模式（示例）
-
-```typescript
-import { ref, watch, type Ref } from 'vue'
-
-export function useDebounce<T>(value: Ref<T>, delay = 300) {
-  const debounced = ref(value.value) as Ref<T>
-  let timer: ReturnType<typeof setTimeout> | null = null
-
-  watch(value, (next) => {
-    if (timer) clearTimeout(timer)
-    timer = setTimeout(() => {
-      debounced.value = next
-    }, delay)
-  })
-
-  return debounced
-}
-```
-
-3. Repository Pattern（示例）
-
-```typescript
-interface Repository<T> {
-  findAll(filters?: Filters): Promise<T[]>
-  findById(id: string): Promise<T | null>
-  create(data: CreateDto): Promise<T>
-  update(id: string, data: UpdateDto): Promise<T>
-  delete(id: string): Promise<void>
-}
-```
+1. API 响应格式
+   - 对外 API 的响应 envelope 需在项目内保持一致（成功/失败字段、分页元数据口径统一）
+2. 框架/组件模式（如适用）
+   - 复用框架推荐的抽象方式（例如 composable/hooks），保持单一职责与可测试性
+3. Repository Pattern（如适用）
+   - 数据访问抽象为仓储接口，业务依赖抽象而非具体存储实现（便于 mock/替换）
 
 ## 四、安全（TypeScript/JavaScript）
 
-1. Secret 管理（示例）
+1. Secret 管理（必须）
+   - 禁止硬编码 secrets；只允许环境变量/密钥管理器注入
+   - 启动/运行时应对必需配置做显式校验（缺失则 fail fast）
 
-```typescript
-// NEVER: Hardcoded secrets
-const apiKey = "sk-proj-xxxxx"
-
-// ALWAYS: Environment variables
-const apiKey = process.env.OPENAI_API_KEY
-
-if (!apiKey) {
-  throw new Error('OPENAI_API_KEY not configured')
-}
-```
-
-2. Agent 支持
-
-- 使用 `security-reviewer` 进行安全审计（覆盖到实现细节与依赖风险）
+2. 安全审计（建议）
+   - 提交前对输入边界、鉴权、依赖风险与敏感信息进行检查
 
 ## 五、测试（TypeScript/JavaScript）
 
 1. E2E 测试
 
-使用 Playwright 作为关键用户流程的 E2E 框架。
-
-2. Agent 支持
-
-- `e2e-runner`：Playwright E2E 测试专员
+对关键用户流程提供 E2E 覆盖；避免用大量 E2E 替代单元/集成测试。
 
 ## 六、TypeScript 风格（精简版）
 
 1. 命名：类型 `PascalCase`；函数/变量 `camelCase`；常量 `UPPER_CASE/UPPER_SNAKE_CASE`；避免难辨识命名
 2. 类型安全：默认避免 `any`；未知类型优先 `unknown` 并收窄；公共导出尽量显式标注关键返回类型
 3. 导入：禁止未使用导入，保持分组与可读性
+4. 代码规范工具链：默认使用 `ESLint + @typescript-eslint + Prettier`；优先采用 ESLint flat config 与 typescript-eslint 的 type-checked 配置（视项目性能与规模取舍）
+5. 格式化与质量门禁：Prettier 只负责格式，ESLint 负责质量检查；提交前通过 git hooks 强制执行 `lint` 与 `prettier --check`
 
 参考：Microsoft TypeScript：https://github.com/microsoft/TypeScript/wiki/Coding-guidelines
+参考：typescript-eslint：https://typescript-eslint.io/getting-started
+参考：typescript-eslint typed linting：https://typescript-eslint.io/getting-started/typed-linting/
+参考：Prettier + eslint-config-prettier：https://github.com/prettier/eslint-config-prettier
 

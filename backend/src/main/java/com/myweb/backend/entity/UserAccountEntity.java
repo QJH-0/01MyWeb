@@ -21,9 +21,6 @@ public class UserAccountEntity {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    @Column(name = "roles", nullable = false, length = 255)
-    private String roles;
-
     public Long getUserId() {
         return userId;
     }
@@ -46,13 +43,5 @@ public class UserAccountEntity {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
-    }
-
-    public String getRoles() {
-        return roles;
-    }
-
-    public void setRoles(String roles) {
-        this.roles = roles;
     }
 }

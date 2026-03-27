@@ -2,46 +2,32 @@
 description: "项目统一执行总规则（整合通用规则版）"
 alwaysApply: true
 ---
-# 01MyWeb Core Rules
+# Core Rules
 
-> 本文件为唯一默认生效的总规则（已整合原 `common-*` 通用细则）。
-> 前端 TypeScript/JavaScript 专项规则见：`typescript.mdc`；后端 Java/Spring 专项规则见：`java.mdc`（均按 globs 生效）。
+> 本文件为默认生效的通用总规则。
+> 语言/框架专项规范应通过独立规则文件按 globs 生效。
 
 ## 一、迭代方式（必须）
 
 1. 不做“大爆发式”全量开发，一次只闭环一个主模块。
-2. 永远先骨架后业务：M0 -> M1 -> M2 -> M3 -> M4/M5 -> M6 -> M7 -> M8。
-3. 每个模块按固定流程执行：任务拆分 -> 实现 -> 自测 -> 联调 -> 回归 -> 文档标记 -> git提交。
+2. 永远先骨架后业务：先最小可运行，再逐步补齐能力。
+3. 每个模块按固定流程执行：任务拆分 -> 实现 -> 测试 -> 联调/回归 -> 文档更新 -> 提交。
 4. 执行任务时默认不中途频繁暂停请求确认（如“要继续吗？”“确认修改吗？”），应持续推进并完整执行计划，直至 100% 完成；仅在用户明确要求暂停/确认或遇到不可自行决策的阻塞时再中断。
 
 ## 二、测试与质量门禁（必须）
 
 1. 新功能/缺陷修复默认走 TDD（RED -> GREEN -> REFACTOR）。
-2. 最低覆盖要求：模块级 >= 80%（单元 + 集成；关键流程补 E2E）。
+2. 覆盖要求：模块级 >= 80%（Unit + Integration；关键流程补 E2E）。
 3. 未通过测试，不允许进入下一模块或进行提交。
 4. 代码需满足：无静默吞错、边界输入已校验、无硬编码敏感信息。
-5. 测试类型（全部需要）
-   - Unit Tests：单个函数/工具/组件
-   - Integration Tests：API endpoints、数据库操作
-   - E2E Tests：关键用户流程（E2E 框架按语言选择）
-6. TDD 工作流（MANDATORY）
-   - 先写测试（RED）
-   - 运行测试：应失败
-   - 写最小实现（GREEN）
-   - 再运行测试：应通过
-   - 重构（REFACTOR）
-   - 校验覆盖率（80%+）
-7. 测试失败排查（先实现后修正）
-   - 用 `tdd-guide` agent 辅助定位失败原因
-   - 检查测试隔离性（避免相互污染）
-   - 核对 mocks/stubs 是否正确
-   - 优先修实现（除非测试本身写错）
+5. 测试金字塔：Unit 为主、Integration 保障边界、E2E 只覆盖关键路径；避免“冰淇淋锥”（过多 E2E）。
+6. 失败排查：先用失败用例/日志证据定位，再修实现；保证测试隔离，避免相互污染。
 
 ## 三、安全与配置（必须）
 
 1. 所有密钥仅允许环境变量注入，禁止入库。
 2. 接口必须有参数校验和统一错误响应，避免泄露敏感内部信息。
-3. 生产相关能力（HTTPS/鉴权/限流）在 M8 前完成最终收口验证。
+3. 生产相关能力（HTTPS/鉴权/限流）必须在上线前完成最终收口验证。
 4. 安全必检项（提交前）
    - 禁止硬编码 secrets（API keys、passwords、tokens）
    - 所有用户输入验证
@@ -51,25 +37,16 @@ alwaysApply: true
    - 鉴权/授权已验证
    - 所有端点具备限流
    - 错误信息不泄露敏感细节
-5. Secret 管理
-   - NEVER 在源码硬编码 secrets
-   - ALWAYS 使用环境变量或密钥管理器
-   - 启动时验证必需 secrets 是否存在
-   - 对可能已泄露的 secrets 做轮换
-6. 安全应急协议（发现问题）
-   - 立即停止（STOP）
-   - 使用 `security-reviewer` agent
-   - 关键安全问题先修（CRITICAL before continue）
-   - 轮换任何已暴露 secrets
-   - 回查代码库中类似问题
+5. Secret 管理：禁止硬编码；缺失配置需 fail fast；疑似泄露需立即轮换并回查。
+6. 日志安全：禁止记录密码、token、敏感个人信息；防日志注入；保证日志访问权限与留存策略。
 
 ## 四、文档与提交（必须）
 
-1. 每完成一个功能点，必须同步更新 `开发计划.md` 与对应阶段文档状态。
-2. Git 原则：先测后提；提交信息遵循 Conventional Commits（feat/fix/refactor/docs/test/chore/perf/ci）。
+1. 每完成一个功能点，必须同步更新对应计划与文档状态。
+2. Git 原则：先测后提；提交信息遵循 Conventional Commits。
 3. 每完成一个“已通过测试且可验收”的功能点，必须在当前回合立即执行 Git 提交；禁止把多个已完成功能长期堆在未提交状态。
 4. 若存在“明确不提交”的用户指令，必须在回合输出中显式记录“未提交原因”和“待提交范围”，避免遗漏。
-5. 任一阶段 DoD 未通过，不得切入下一阶段。
+5. 任一阶段/里程碑 DoD 未通过，不得切入下一阶段/里程碑。
 
 ## 五、执行优先级
 
@@ -84,36 +61,31 @@ alwaysApply: true
 2. 涉及库/API/框架用法、版本差异、配置项、报错排查时，优先通过联网检索与官方文档确认。
 3. 优先使用 Context7 获取最新文档与示例；无法覆盖时再补充其他可靠网络来源并交叉验证。
 
-补充：提交信息格式（推荐）
-
-```
-<type>: <description>
-
-<optional body>
-```
-
-常用 type：`feat`、`fix`、`refactor`、`docs`、`test`、`chore`、`perf`、`ci`
+提交信息格式：`<type>[scope]: <description>`（必要时在 footer 标注 breaking change）。
 
 ## 七、编码规范（Coding Style）
 
 1. 不可变（CRITICAL）
    - ALWAYS 创建新对象，NEVER 原地修改（避免隐藏副作用）
-2. 文件组织
+2. 遵循流行规范（CRITICAL）
+   - 前后端实现常见能力时优先采用官方/社区推荐的主流写法与约定（框架文档优先）。
+   - 不为解决常见问题“自己创造”新的约定/协议/中间件/错误格式；必要时复用项目既有模式与统一约定。
+3. 文件组织
    - MANY SMALL FILES > FEW LARGE FILES
    - 常见规模：200-400 行，最大不超过 800 行
    - 从大模块提取 utilities
    - 按 feature/domain 组织，而不是按类型组织
-3. 错误处理
+4. 错误处理
    - 每一层都显式处理错误
    - UI 面向代码：提供用户友好的错误信息
    - 服务端：记录详细错误上下文
    - 禁止静默吞错
-4. 输入校验（边界处校验）
+5. 输入校验（边界处校验）
    - 所有用户输入必须先校验再处理
    - 有 schema 验证能力优先用 schema（如 Zod；后端以 Java Bean Validation 为准）
    - Fail fast + 清晰的错误信息
    - 不信任外部数据（API/用户输入/文件内容等）
-5. 完成前检查表
+6. 完成前检查表
    - 可读性：命名合理、结构清晰
    - 函数粒度：小而专注（<50 行为宜）
    - 文件聚焦：<800 行
@@ -124,52 +96,30 @@ alwaysApply: true
 
 ## 八、工程模式与代码习惯（Patterns）
 
-1. Skeleton 项目
-   - 优先找成熟 skeleton 项目
-   - 用并行 agents 做评估：安全性、可扩展性、相关性评分、实现规划
-   - 基于最匹配的 skeleton 作为起点再迭代
-2. Repository Pattern
-   - 将数据访问封装到统一接口层
-   - 标准操作：`findAll`、`findById`、`create`、`update`、`delete`
-   - 具体实现处理存储细节（数据库/API/文件等）
-   - 业务逻辑依赖抽象接口，而非具体存储机制
-   - 提升可替换性与可测试性（可 mock）
-3. API 响应格式（统一 envelope）
-   - success/status 指示
-   - 数据载荷：成功时为数据，失败时可为 null
-   - 错误信息字段：成功时可为 null
-   - 分页元数据：total/page/limit
+1. 遵循流行规范（CRITICAL）
+   - 优先采用官方/社区主流、可维护的工程模式与约定（先复用，后扩展）。
+   - 不为常见问题“自己创造”新的模式/协议/错误格式/响应格式；如需自定义，必须有明确收益与一致性方案。
+2. 常见可复用模式（如适用）
+   - Repository：业务依赖抽象接口，存储细节下沉到实现层，便于测试与替换
+   - API 响应 envelope：成功/失败字段与分页元数据口径统一（`total/page/limit`）
 
 ## 九、Hooks 系统（Hooks）
 
-1. Hook 类型
-   - `PreToolUse`：工具执行前（校验参数、修改参数等）
-   - `PostToolUse`：工具执行后（自动格式化/校验等）
-   - `Stop`：会话结束（最终验证）
-2. 自动接收权限（谨慎使用）
-   - 仅在可信且计划明确时开启
-   - 不要使用 `dangerously-skip-permissions`
-   - `allowedTools` 通过 `~/.claude.json` 配置
-3. `TodoWrite` 最佳实践
-   - 用它来记录多步任务的进度与关键理解点
-   - 避免漏写步骤、避免颗粒度错误导致返工
-   - Todo 列表也能帮助发现步骤顺序问题
+1. Hook 仅保留必要能力：参数校验、自动格式化、会话结束前最终检查
+2. 自动授权仅在可信任务中开启，禁止使用高风险跳过权限配置
+3. 多步骤任务需维护 `TodoWrite`，保证步骤可追踪且不漏项
 
 ## 十、性能优化与排错（Performance）
 
-1. 模型选择策略（按任务类型）
-   - `Haiku 4.5`：轻量 agent、频繁调用、并行 worker
-   - `Sonnet 4.6`：主要编码与编排多 agent 工作流
-   - `Opus 4.5`：复杂架构决策、最高推理需求、研究分析
-2. Context 窗口管理
+1. Context 窗口管理
    - 避免使用上下文的最后 20% 用于大规模重构/跨多文件实现/复杂交互调试
    - 低上下文敏感任务：单文件编辑、独立工具创建、文档更新、小型 bug fix
-3. Extended Thinking + Plan Mode
-   - Extended thinking 默认开启（预留内部 reasoning token）
-   - 需要结构化方案时启用 Plan Mode
-4. 构建失败排错
-   - 用 `build-error-resolver` agent
-   - 按技术栈选择命令逐步修复并验证（前端：`npm run build`；后端：`mvn -B test` / `mvn spring-boot:run`）
+2. Extended Thinking + Plan Mode
+   - 复杂任务先做结构化方案，再进入实现
+   - 多方案有取舍时，先对比再落地
+3. 构建失败排错
+   - 优先修复构建/测试阻断，再继续功能迭代
+   - 按项目技术栈运行对应的构建与测试命令，逐步定位并修复（例如：前端 build/test；后端 unit/integration test）
 
 ## 十一、Git 工作流（Git Workflow）
 
@@ -183,16 +133,15 @@ alwaysApply: true
 ## 十二、特性开发流程（Development Workflow）
 
 1. Plan First
-   - 用 `planner` agent 输出实现计划
+   - 先输出实现计划
    - 识别依赖与风险，拆分阶段
 2. TDD Approach
-   - 用 `tdd-guide` agent
    - 写测试优先（RED）
    - 实现通过测试（GREEN）
    - 重构（IMPROVE）
    - 验证覆盖率（80%+）
 3. 代码审查
-   - 代码写完后立刻用 `code-reviewer`（通用审查）
+   - 代码写完后立即进行代码审查（质量/安全/可维护性）
    - 优先修复 CRITICAL/HIGH 问题
    - 其他 Medium 问题尽量修
 4. Commit & Push
@@ -200,32 +149,16 @@ alwaysApply: true
 
 ## 十三、Agent 协作编排（Agent Orchestration）
 
-1. 可用 agents（位于 `.cursor/agents/`）
-   - planner：实现规划
-   - architect：系统设计
-   - tdd-guide：TDD（新功能/缺陷修复）
-   - code-reviewer：通用代码审查（跨语言/跨层）
-   - frontend-reviewer：Vue3 前端专项代码审查（涉及前端改动时）
-   - java-reviewer：Java/Spring 后端专项代码审查
-   - security-reviewer：安全分析（提交前）
-   - build-error-resolver：构建错误修复
-   - java-build-resolver：Java/Maven 构建错误专项修复
-   - e2e-runner：E2E 测试（关键流程）
-   - refactor-cleaner：清理无用代码
-   - doc-updater：文档更新
-   - git-committer：Git 提交执行（标准化 commit 流程与提交信息）
-2. 何时直接调用（无需用户提示）
-   - 复杂功能：`planner`
-   - 刚修改/刚写完代码：`code-reviewer`
-   - 涉及前端 Vue3 改动：补 `frontend-reviewer`
-   - 涉及后端 Java/Spring：补 `java-reviewer`
-   - 涉及后端构建失败：优先 `java-build-resolver`
-   - 缺陷修复/新功能：`tdd-guide`
-   - 架构决策：`architect`
-   - 变更已通过测试且准备提交：`git-committer`
-3. 并行任务执行
-   - 使用并行 agents 处理彼此独立的工作
-4. 多视角分析
+1. 何时直接调用（无需用户提示）
+   - 复杂功能：先做实现规划（plan），再进入实现
+   - 代码写完：进行代码审查（code review）
+   - 缺陷修复/新功能：采用 TDD（test-first）
+   - 架构决策：先做架构评审与权衡
+   - 构建失败：先修复构建/测试，再继续开发
+   - 变更已通过测试且准备提交：执行标准化提交流程
+2. 并行任务执行
+   - 使用并行执行处理彼此独立的工作
+3. 多视角分析
    - 复杂问题拆分子角色：事实审阅、资深工程、专家安全、一致性审阅、冗余检查等
 
 ## 十四、前端设计技能与 UI 规范（必须）
@@ -237,7 +170,7 @@ alwaysApply: true
    - 优先复用项目既有设计系统（颜色、字号、间距、圆角、阴影、动效）
    - 优先复用已有组件与样式约定，不重复造轮子
    - 新增视觉风格前，需与现有页面保持整体一致性（品牌、可读性、可访问性）
-   - 若 `UI Ux pro max` 已输出视觉规范或 token，前端实现必须以该规范为准
+   - 若存在已定义视觉规范或 design token，前端实现必须以该规范为准
 3. 交付前必须执行前端一致性自检
    - 检查主题/配色一致、排版层级一致、状态样式完整（hover/active/disabled/error）
    - 检查响应式与可访问性（键盘可达、语义结构、对比度）是否达标
@@ -253,3 +186,5 @@ alwaysApply: true
 参考（原则来源）：
 - Google Java Style：https://google.github.io/styleguide/javaguide.html
 - OWASP 错误处理：https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+ - OWASP Logging：https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
+ - Conventional Commits：https://www.conventionalcommits.org/
