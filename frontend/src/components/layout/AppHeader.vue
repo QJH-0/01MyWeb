@@ -27,11 +27,16 @@ const links = computed(() => {
     { to: '/ai', label: 'AI' },
   ] as const
 
+  const adminLinks =
+    authStore.isAuthenticated && authStore.profile?.permissions.includes('PERM_ADMIN_PANEL')
+      ? [{ to: '/admin/projects', label: '管理' }]
+      : []
+
   const accountLink = authStore.isAuthenticated
     ? [{ to: '/profile', label: '账户中心' }]
     : [{ to: '/login', label: '登录/注册' }]
 
-  return [...mainLinks, ...accountLink]
+  return [...mainLinks, ...adminLinks, ...accountLink]
 })
 </script>
 

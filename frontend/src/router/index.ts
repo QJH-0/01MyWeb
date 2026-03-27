@@ -9,6 +9,8 @@ const ExperienceView = () => import('../views/ExperienceView.vue')
 const ContactView = () => import('../views/ContactView.vue')
 const ProjectsView = () => import('../views/ProjectsView.vue')
 const ProjectDetailView = () => import('../views/ProjectDetailView.vue')
+const AdminProjectListView = () => import('../views/projects/admin/ProjectListView.vue')
+const AdminProjectEditView = () => import('../views/projects/admin/ProjectEditView.vue')
 const BlogView = () => import('../views/BlogView.vue')
 const BlogDetailView = () => import('../views/BlogDetailView.vue')
 const AIView = () => import('../views/AIView.vue')
@@ -58,6 +60,24 @@ const router = createRouter({
       path: '/projects/:id',
       name: 'project-detail',
       component: ProjectDetailView,
+    },
+    {
+      path: '/admin/projects',
+      name: 'admin-projects',
+      component: AdminProjectListView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/projects/new',
+      name: 'admin-project-new',
+      component: AdminProjectEditView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/projects/:id/edit',
+      name: 'admin-project-edit',
+      component: AdminProjectEditView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/blog',
