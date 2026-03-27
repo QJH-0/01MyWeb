@@ -97,10 +97,6 @@ onMounted(loadPage)
       <template v-if="loading">
         <Loading title="正在加载经历页内容…" hint="从 /api/content/experience 获取内容" />
       </template>
-      <template v-else-if="error">
-        <ErrorMessage :message="error" @retry="loadPage" />
-        <p v-if="traceId" class="trace">traceId: {{ traceId }}</p>
-      </template>
       <template v-else-if="page">
         <BackendOfflineBanner v-if="offline" :details="error ?? undefined" @retry="loadPage" />
         <h1>{{ page.title || '经历' }}</h1>
@@ -112,6 +108,10 @@ onMounted(loadPage)
         <div style="margin-top: 14px" v-if="isEmpty">
           <EmptyState title="经历页内容为空" hint="当前为 M1 占位数据，可后续补齐 sections。" />
         </div>
+      </template>
+      <template v-else-if="error">
+        <ErrorMessage :message="error" @retry="loadPage" />
+        <p v-if="traceId" class="trace">traceId: {{ traceId }}</p>
       </template>
     </section>
   </main>
