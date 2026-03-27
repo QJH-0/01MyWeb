@@ -24,6 +24,17 @@ body {
   min-height: 100vh;
 }
 
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.app-main {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
 .topbar {
   height: 64px;
   position: sticky;
@@ -71,6 +82,34 @@ body {
   display: grid;
   place-items: center;
   padding: 24px;
+}
+
+.app-footer {
+  border-top: 1px solid var(--border);
+  background: rgba(247, 250, 255, 0.86);
+  backdrop-filter: blur(6px);
+}
+
+.app-footer__inner {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 18px 20px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.app-footer__brand {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.app-footer__meta {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .card {
@@ -222,6 +261,10 @@ h1 {
     padding: 12px 14px;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .app-main {
+    width: 100%;
   }
 
   .page {
