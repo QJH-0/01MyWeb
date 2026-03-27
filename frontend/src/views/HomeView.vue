@@ -1,18 +1,28 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { fetchHomeContent, type ContentPage } from '../api/content'
+import BackendOfflineBanner from '../components/common/BackendOfflineBanner.vue'
 import EmptyState from '../components/common/EmptyState.vue'
 import ErrorMessage from '../components/common/ErrorMessage.vue'
 import Loading from '../components/common/Loading.vue'
 
 const loading = ref(true)
 const error = ref<string | null>(null)
+const offline = ref(false)
 const traceId = ref('')
 const page = ref<ContentPage | null>(null)
+
+const fallbackPage: ContentPage = {
+  title: 'MyWeb',
+  summary: '欢迎来到我的门户主页。',
+  sections: [],
+  updatedAt: new Date(0).toISOString(),
+}
 
 async function loadPage() {
   loading.value = true
   error.value = null
+  offline.value = false
   try {
     const response = await fetchHomeContent()
     traceId.value = response.traceId
@@ -23,6 +33,8 @@ async function loadPage() {
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error'
     error.value = message
+    offline.value = true
+    page.value = fallbackPage
   } finally {
     loading.value = false
   }
@@ -40,12 +52,8 @@ onMounted(loadPage)
         <Loading title="正在加载首页内容…" hint="从 /api/content/home 获取内容" />
       </template>
 
-      <template v-else-if="error">
-        <ErrorMessage :message="error" @retry="loadPage" />
-        <p v-if="traceId" class="trace">traceId: {{ traceId }}</p>
-      </template>
-
       <template v-else-if="page">
+        <BackendOfflineBanner v-if="offline" :details="error ?? undefined" @retry="loadPage" />
         <div class="hero">
           <h1>{{ page.title || 'MyWeb' }}</h1>
           <p class="desc">{{ page.summary || '欢迎来到我的门户主页。' }}</p>
@@ -72,6 +80,17 @@ onMounted(loadPage)
           <EmptyState title="首页内容为空" hint="当前为 M1 占位数据，可后续通过管理端配置。" />
         </div>
       </template>
+
+      <template v-else-if="error">
+        <ErrorMessage :message="error" @retry="loadPage" />
+        <p v-if="traceId" class="trace">traceId: {{ traceId }}</p>
+      </template>
     </section>
   </div>
 </template>
+
+<style scoped>
+.card > :deep(.state-card) {
+  margin-bottom: 14px;
+}
+</style>
