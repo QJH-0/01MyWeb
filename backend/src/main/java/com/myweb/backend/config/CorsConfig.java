@@ -25,7 +25,7 @@ public class CorsConfig {
                 .filter(v -> !v.isEmpty())
                 .collect(Collectors.toList());
         config.setAllowedOrigins(originList);
-        config.setAllowedMethods(List.of("GET", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Trace-Id"));
         config.setExposedHeaders(List.of("X-Trace-Id"));
 
