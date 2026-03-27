@@ -83,6 +83,24 @@
 - 请求头：`Authorization: Bearer <accessToken>`
 - 响应：`ApiResponse<{ userId: number, username: string, roles: string[], permissions: string[] }>`
 
+### 1.1 鉴权模型（RBAC，数据库驱动）
+
+- **基本约定**
+  - `roles`：以 `ROLE_` 前缀表示角色（如 `ROLE_USER`、`ROLE_ADMIN`）
+  - `permissions`：以 `PERM_` 前缀表示权限（如 `PERM_AI_ACCESS`）
+  - Spring Security 侧统一用 `authority` 字符串做鉴权（`hasAuthority(...)`）
+
+- **数据模型（MySQL / Flyway）**
+  - `user_accounts`：仅存账号基础信息（不再存储 `roles` 字段）
+  - `rbac_roles(authority)`：角色表（唯一）
+  - `rbac_permissions(authority)`：权限表（唯一）
+  - `rbac_user_roles(user_id, role_id)`：用户-角色关联（多对多）
+  - `rbac_role_permissions(role_id, permission_id)`：角色-权限关联（多对多）
+
+- **默认权限集（种子数据）**
+  - `ROLE_USER` -> `PERM_AI_ACCESS`、`PERM_COMMENT_WRITE`
+  - `ROLE_ADMIN` -> `PERM_ADMIN_PANEL`、`PERM_AI_ACCESS`、`PERM_COMMENT_WRITE`
+
 ## 2. API清单（URL + 参数）
 
 ### 2.1 健康检查
