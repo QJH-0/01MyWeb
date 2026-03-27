@@ -8,3 +8,18 @@ server:
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  probes:
+    mysql:
+      host: ${MYSQL_PROBE_HOST:localhost}
+      port: ${MYSQL_PROBE_PORT:3306}
+    redis:
+      host: ${REDIS_PROBE_HOST:localhost}
+      port: ${REDIS_PROBE_PORT:6379}
+    elasticsearch:
+      host: ${ES_PROBE_HOST:localhost}
+      port: ${ES_PROBE_PORT:9200}
+    minio:
+      host: ${MINIO_PROBE_HOST:localhost}
+      port: ${MINIO_PROBE_PORT:9000}
+    connect-timeout-ms: ${PROBE_CONNECT_TIMEOUT_MS:800}
+    read-timeout-ms: ${PROBE_READ_TIMEOUT_MS:1200}
