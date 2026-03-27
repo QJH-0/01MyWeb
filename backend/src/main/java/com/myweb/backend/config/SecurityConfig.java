@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/health", "/api/auth/register", "/api/auth/login", "/api/auth/refresh").permitAll()
                         .requestMatchers("/api/auth/me", "/api/auth/logout").authenticated()
                         .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/content/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/projects/**", "/api/blogs/**", "/api/search/**", "/api/comments/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/comments/**").hasAuthority(RbacPermission.COMMENT_WRITE.authority())
                         .requestMatchers(HttpMethod.PUT, "/api/comments/**").hasAuthority(RbacPermission.COMMENT_WRITE.authority())
