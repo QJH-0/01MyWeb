@@ -13,6 +13,7 @@ import { toAbsoluteHttpUrl } from '../../utils/url'
 import BackendOfflineBanner from '../../components/common/BackendOfflineBanner.vue'
 import ErrorMessage from '../../components/common/ErrorMessage.vue'
 import Loading from '../../components/common/Loading.vue'
+import BlogCommentsPanel from './BlogCommentsPanel.vue'
 
 const route = useRoute()
 
@@ -147,10 +148,7 @@ watch(
           <article ref="mdRoot" class="md-content" v-html="htmlBody" />
         </div>
 
-        <section class="comments-placeholder" aria-label="评论">
-          <h2 class="h3">评论</h2>
-          <p class="muted">评论、回复与点赞需登录，将在 `/api/comments` 联调完成后接入；当前页面仅展示正文。</p>
-        </section>
+        <BlogCommentsPanel :blog-id="blog.id" :offline="offline" />
 
         <p v-if="traceId" class="trace">traceId: {{ traceId }}</p>
 
@@ -314,20 +312,6 @@ watch(
   background: rgba(180, 71, 95, 0.06);
   color: var(--error, #b4475f);
   font-size: 13px;
-}
-
-.h3 {
-  margin: 1.5em 0 0.5em;
-  font-size: 1.1rem;
-  font-weight: 800;
-}
-
-.comments-placeholder {
-  margin-top: 28px;
-  padding: 16px;
-  border-radius: 14px;
-  border: 1px dashed rgba(203, 216, 231, 0.95);
-  background: rgba(79, 116, 163, 0.04);
 }
 
 .foot {
