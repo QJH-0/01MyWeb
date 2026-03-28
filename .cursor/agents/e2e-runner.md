@@ -39,7 +39,7 @@ agent-browser screenshot result.png
 
 本仓库**不**在 `frontend` 内安装 `@playwright/test`。联调/验收关键路径时，在 Cursor 中启用 MCP **`playwright`**（`mcp.json` 里为 `@playwright/mcp`），由 Agent 调用 MCP 工具驱动浏览器（`browser_navigate`、`browser_snapshot`、`browser_click`、`browser_type`、`browser_fill_form`、`browser_handle_dialog`、`browser_take_screenshot` 等），按步骤执行场景并截图留证。
 
-前置条件与手工联调相同：后端 `8080`、前端 `vite`（通常 `5173`）、`frontend/.env` 中 `VITE_ADMIN_TOKEN` 与后端 `APP_ADMIN_TOKEN` 一致；管理员账号见项目 `README.md`。
+前置条件与本地全栈联调相同：后端 `8080`、前端 `vite`（通常 `5173`）、`frontend/.env` 中 `VITE_ADMIN_TOKEN` 与后端 `APP_ADMIN_TOKEN` 一致；管理员账号见项目 `README.md`。
 
 CI 若需无人值守 E2E，再单独引入 `@playwright/test` 或 Playwright 官方镜像工作流；日常开发以 MCP 交互为主。
 
