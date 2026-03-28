@@ -179,6 +179,9 @@ function mapCommentWriteError(code: string | null | undefined) {
 
 function commentWriteErrorFromAxios(e: unknown) {
   if (axios.isAxiosError(e)) {
+    if (!e.response) {
+      return '无法连接后端，评论或点赞暂不可用。'
+    }
     const code = (e.response?.data as { error?: string } | undefined)?.error
     return mapCommentWriteError(code)
   }
