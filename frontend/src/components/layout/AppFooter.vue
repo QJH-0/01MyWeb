@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 页脚版权年使用运行时年，避免每年手动改模板。 */
 const year = new Date().getFullYear()
 </script>
 

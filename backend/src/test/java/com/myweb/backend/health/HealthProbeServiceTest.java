@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/** 探针单元测试：不可达端点映射为 false 与 UNAVAILABLE，不抛到调用方。 */
 class HealthProbeServiceTest {
 
     @Test

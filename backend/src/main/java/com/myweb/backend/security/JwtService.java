@@ -14,6 +14,9 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Set;
 
+/**
+ * JWT 签发与校验：密钥支持 Base64 或原文（长度不足会 fail fast）；claims 中含角色/权限集合。
+ */
 @Service
 public class JwtService {
     private final SecretKey key;
@@ -65,6 +68,16 @@ public class JwtService {
         return keyBytes;
     }
 
+    /**
+     * 生成 JWT access token。
+     * 包含用户ID、用户名、角色集合和权限集合。
+     *
+     * @param userId      用户ID
+     * @param username    用户名
+     * @param roles       角色集合
+     * @param permissions 权限集合
+     * @return JWT token 字符串
+     */
     public String generateAccessToken(
             long userId,
             String username,
@@ -84,6 +97,12 @@ public class JwtService {
                 .compact();
     }
 
+    /**
+     * 解析并验证 JWT token。
+     *
+     * @param token JWT token 字符串
+     * @return JWT claims
+     */
     public Claims parse(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }

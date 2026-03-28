@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 认证 API：注册/登录/刷新为匿名可达；me/logout 需已认证主体。 */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -58,6 +59,12 @@ public class AuthController {
         return ApiResponse.ok(authService.me(principal), traceId(httpRequest));
     }
 
+    /**
+     * 从请求属性中获取 traceId。
+     *
+     * @param request HTTP 请求
+     * @return traceId 字符串，若不存在则返回空字符串
+     */
     private String traceId(HttpServletRequest request) {
         Object traceAttr = request.getAttribute(TraceIdFilter.TRACE_ID_REQUEST_ATTR);
         return traceAttr == null ? "" : traceAttr.toString();

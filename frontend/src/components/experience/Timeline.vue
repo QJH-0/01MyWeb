@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 纵向时间线：可由 CMS sections 映射生成，也可直接传入结构化 `items`。 */
 export interface TimelineItem {
   time: string
   title: string

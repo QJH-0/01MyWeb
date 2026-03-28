@@ -10,14 +10,29 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * RBAC 装载：通过参数化 SQL 拉取用户角色与权限，供 JWT 注入与接口鉴权；表结构变更需同步查询。
+ */
 @Service
 public class RbacAuthorizationService {
     private final JdbcTemplate jdbcTemplate;
 
+    /**
+     * 构造 RBAC 授权服务。
+     *
+     * @param jdbcTemplate JDBC 模板
+     */
     public RbacAuthorizationService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /**
+     * 加载用户的角色和权限。
+     * 通过 JDBC 查询 rbac_user_roles、rbac_roles 和 rbac_permissions 表。
+     *
+     * @param userId 用户ID
+     * @return 用户的角色和权限集合
+     */
     public UserRbacAuthorities loadAuthorities(long userId) {
         List<String> roleAuthoritiesRaw = jdbcTemplate.query(
                 """
@@ -47,6 +62,14 @@ public class RbacAuthorizationService {
         return new UserRbacAuthorities(roleAuthorities, permissionAuthorities);
     }
 
+    /**
+     * 为用户分配角色。
+     * 如果用户已拥有该角色，则跳过。
+     *
+     * @param userId         用户ID
+     * @param roleAuthority  角色权限字符串（如 "ROLE_ADMIN"）
+     * @throws ApiException 如果角色不存在
+     */
     @Transactional
     public void assignRoleToUser(long userId, String roleAuthority) {
         Integer roleCount = jdbcTemplate.queryForObject(
@@ -81,6 +104,7 @@ public class RbacAuthorizationService {
         );
     }
 
+    /** 单次查询聚合的角色 authority 集合与细粒度 permission authority 集合。 */
     public record UserRbacAuthorities(Set<String> roleAuthorities, Set<String> permissionAuthorities) {
     }
 }

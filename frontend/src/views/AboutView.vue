@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 关于页：CMS 内容与本地 fallback（技能/技术栈）并存，sections 结构由后端驱动渲染扩展块。
+ */
 import { computed, onMounted, ref } from 'vue'
 import { fetchAboutContent, type ContentPage } from '../api/content'
 import BackendOfflineBanner from '../components/common/BackendOfflineBanner.vue'
@@ -6,19 +9,23 @@ import EmptyState from '../components/common/EmptyState.vue'
 import ErrorMessage from '../components/common/ErrorMessage.vue'
 import Loading from '../components/common/Loading.vue'
 
+/** 页面状态 */
 const loading = ref(true)
 const error = ref<string | null>(null)
 const offline = ref(false)
 const traceId = ref('')
 const page = ref<ContentPage | null>(null)
 
+/** 默认技能列表 */
 const fallbackSkills = ['Java', 'Spring Boot', 'Vue 3', 'TypeScript', 'MySQL', 'Docker']
+/** 默认技术栈分类 */
 const fallbackStacks = [
   { title: '后端', items: ['Spring Boot', 'Spring Security', 'JWT', 'MySQL', 'Redis'] },
   { title: '前端', items: ['Vue 3', 'Vite', 'Vue Router', 'Pinia', 'SCSS'] },
   { title: '工程化', items: ['Maven', 'ESLint/Prettier', 'Docker Compose', 'Nginx'] },
 ] as const
 
+/** 默认页面数据 */
 const fallbackPage: ContentPage = {
   title: '关于我',
   summary: '这里将展示个人介绍、技能标签和技术栈概览。',
@@ -26,6 +33,7 @@ const fallbackPage: ContentPage = {
   updatedAt: new Date(0).toISOString(),
 }
 
+/** 加载关于页内容 */
 async function loadPage() {
   loading.value = true
   error.value = null
@@ -46,8 +54,13 @@ async function loadPage() {
   }
 }
 
+/** 计算属性：判断页面是否为空 */
 const isEmpty = computed(() => !page.value?.title && !page.value?.summary && (page.value?.sections?.length ?? 0) === 0)
 
+/**
+ * 计算属性：从页面 sections 提取技能列表。
+ * 如果没有 skills section，则返回默认技能列表。
+ */
 const skills = computed(() => {
   const sections = page.value?.sections
   if (!sections || !Array.isArray(sections)) return fallbackSkills

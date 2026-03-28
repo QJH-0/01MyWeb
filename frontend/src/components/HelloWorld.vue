@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** Vite 脚手架示例组件；主站壳层未使用，保留便于上手演示 HMR。 */
 import { ref } from 'vue'
 import viteLogo from '../assets/vite.svg'
 import heroImg from '../assets/hero.png'

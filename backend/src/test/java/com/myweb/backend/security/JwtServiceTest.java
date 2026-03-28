@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/** JwtService 纯单元：明文/ Base64 密钥、claims 与过期行为。 */
 class JwtServiceTest {
 
     @Test

@@ -1,5 +1,8 @@
 package com.myweb.backend.common;
 
+/**
+ * 对外错误码常量：与前端 {@code error-code} 映射表保持一致；新增码需同步前端展示文案。
+ */
 public final class ErrorCodes {
     private ErrorCodes() {
     }

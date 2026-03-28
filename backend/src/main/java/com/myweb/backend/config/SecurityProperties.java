@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
+/**
+ * 安全相关配置绑定：JWT TTL、验证码策略、注册/登录限流、管理员备用 token 等均要求环境注入且启动期校验。
+ */
 @Validated
 @ConfigurationProperties(prefix = "app.security")
 public record SecurityProperties(

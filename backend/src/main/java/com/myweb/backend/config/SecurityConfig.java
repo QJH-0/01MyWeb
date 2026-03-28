@@ -23,8 +23,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.io.IOException;
 
+/**
+ * Spring Security 主链：无状态 JWT + 管理端补充头过滤；高风险路径单独 RBAC 与 AI 限流链顺序在 DSL 中固定。
+ */
 @Configuration
 public class SecurityConfig {
+    /**
+     * 配置安全过滤器链。
+     * 包括 CSRF 禁用、会话管理、请求授权和异常处理。
+     *
+     * @param http                   HTTP 安全配置
+     * @param jwtAuthenticationFilter JWT 认证过滤器
+     * @param adminTokenFilter        管理员令牌过滤器
+     * @param rateLimitFilter         限流过滤器
+     * @param objectMapper            JSON 对象映射器
+     * @return 配置好的安全过滤器链
+     * @throws Exception 如果配置失败
+     */
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -67,11 +82,28 @@ public class SecurityConfig {
                 .build();
     }
 
+    /**
+     * 创建密码编码器 Bean。
+     * 使用 BCrypt 算法进行密码哈希。
+     *
+     * @return BCrypt 密码编码器
+     */
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * 写入认证错误响应。
+     * 用于处理认证失败和访问被拒绝的情况。
+     *
+     * @param response     HTTP 响应
+     * @param request      HTTP 请求
+     * @param objectMapper JSON 对象映射器
+     * @param status       HTTP 状态码
+     * @param code         错误代码
+     * @throws IOException 如果写入响应失败
+     */
     private void writeAuthError(
             HttpServletResponse response,
             HttpServletRequest request,

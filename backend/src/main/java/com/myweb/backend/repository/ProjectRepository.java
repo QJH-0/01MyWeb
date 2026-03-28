@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
+/** 项目查询：公开/管理端方法名体现 deletedAt、visible 过滤条件，避免调用方漏过滤。 */
 public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
     Page<ProjectEntity> findAllByDeletedAtIsNullAndVisibleTrue(Pageable pageable);
 

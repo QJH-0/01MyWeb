@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/** 预检 OPTIONS 与 CORS 响应头是否符合白名单配置。 */
 @SpringBootTest
 @AutoConfigureMockMvc
 class CorsConfigTest {

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 管理端项目列表：依赖 JWT +（开发环境）`X-Admin-Token`；403/仅 JWT 时提示配置 admin token。
+ * 删除为软删，具体以后端为准。
+ */
 import axios from 'axios'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'

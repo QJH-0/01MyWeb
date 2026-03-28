@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/** 全局异常映射：受控 4xx 与未预期 5xx 均不泄露堆栈细节。 */
 @SpringBootTest
 @AutoConfigureMockMvc
 class GlobalExceptionHandlerTest {

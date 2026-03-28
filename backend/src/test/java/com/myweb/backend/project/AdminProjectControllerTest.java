@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/** 管理端项目 API 集成：JWT + admin token、CRUD 与错误路径。 */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional

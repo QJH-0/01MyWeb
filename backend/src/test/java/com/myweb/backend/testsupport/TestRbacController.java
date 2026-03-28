@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 仅测试 profile：模拟 AI/搜索路由供 Security 与限流断言使用。 */
 @RestController
 @RequestMapping("/api")
 public class TestRbacController {

@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+/** M3 博客详情占位。 */
+</script>
 
 <template>
   <main class="page">

@@ -2,6 +2,9 @@ package com.myweb.backend.common;
 
 import java.time.Instant;
 
+/**
+ * 统一 API 信封：前端与集成方只依赖 success/error/data/traceId，避免各控制器自定义形态。
+ */
 public record ApiResponse<T>(
         boolean success,
         T data,

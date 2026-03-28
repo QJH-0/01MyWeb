@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 公开项目列表：支持分类筛选与分页状态；接口失败时用内置示例数据降级（仅前台展示）。
+ */
 import { computed, onMounted, ref } from 'vue'
 import { fetchProjects, type Project } from '../api/projects'
 import BackendOfflineBanner from '../components/common/BackendOfflineBanner.vue'

@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 
 import java.time.Instant;
 
+/** 项目主表：`deletedAt` 非空表示软删；标签在 {@link ProjectTagEntity} 一对多维护。 */
 @Entity
 @Table(name = "project")
 public class ProjectEntity {

@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/** 验证限流阈值可通过配置/环境变量注入并反映到 Filter 实例。 */
 @SpringBootTest
 class RateLimitFilterConfigTest {
     @Autowired

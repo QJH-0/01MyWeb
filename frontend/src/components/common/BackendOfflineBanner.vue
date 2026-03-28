@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 与“硬错误”区分：提示当前为降级/离线渲染，避免用户误以为写操作已成功持久化。
+ */
 defineProps<{
   details?: string
 }>()

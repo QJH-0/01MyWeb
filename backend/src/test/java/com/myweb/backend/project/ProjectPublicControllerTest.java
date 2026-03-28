@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/** 公开项目列表/详情：可见性、软删过滤与分页契约。 */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional

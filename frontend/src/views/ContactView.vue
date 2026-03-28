@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 联系页：当前仅前端校验（M1）；提交流程与防刷需后续对接后端与验证码策略。
+ */
 import { computed, ref } from 'vue'
 
 const name = ref('')
@@ -10,10 +13,12 @@ const feedback = ref<string | null>(null)
 
 const canSubmit = computed(() => !!name.value.trim() && !!email.value.trim() && !!message.value.trim())
 
+/** 验证邮箱格式 */
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
+/** 提交联系表单 */
 function onSubmit() {
   error.value = null
   feedback.value = null

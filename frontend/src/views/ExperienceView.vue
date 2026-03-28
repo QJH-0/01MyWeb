@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 经历页：将 `ContentPage.sections` 解析为时间线；接口失败时使用内置 `fallbackItems` 保证版式可预览。
+ */
 import { computed, onMounted, ref } from 'vue'
 import { fetchExperienceContent, type ContentPage } from '../api/content'
 import BackendOfflineBanner from '../components/common/BackendOfflineBanner.vue'
@@ -7,12 +10,14 @@ import ErrorMessage from '../components/common/ErrorMessage.vue'
 import Loading from '../components/common/Loading.vue'
 import Timeline, { type TimelineItem } from '../components/experience/Timeline.vue'
 
+/** 页面加载状态 */
 const loading = ref(true)
 const error = ref<string | null>(null)
 const offline = ref(false)
 const traceId = ref('')
 const page = ref<ContentPage | null>(null)
 
+/** 默认时间线数据 */
 const fallbackItems: TimelineItem[] = [
   {
     time: '2026',
@@ -28,6 +33,7 @@ const fallbackItems: TimelineItem[] = [
   },
 ] as const
 
+/** 默认页面数据 */
 const fallbackPage: ContentPage = {
   title: '经历',
   summary: '时间线组件将在这里展示教育、工作与项目经历。',
@@ -35,6 +41,7 @@ const fallbackPage: ContentPage = {
   updatedAt: new Date(0).toISOString(),
 }
 
+/** 加载经历页内容 */
 async function loadPage() {
   loading.value = true
   error.value = null
@@ -55,8 +62,13 @@ async function loadPage() {
   }
 }
 
+/** 计算属性：判断页面是否为空 */
 const isEmpty = computed(() => !page.value?.title && !page.value?.summary && (page.value?.sections?.length ?? 0) === 0)
 
+/**
+ * 计算属性：从页面 sections 解析时间线数据。
+ * 查找 type 为 'timeline' 的 section，解析其 items 为时间线格式。
+ */
 const items = computed<TimelineItem[]>(() => {
   const sections = page.value?.sections
   if (!sections || !Array.isArray(sections)) return fallbackItems

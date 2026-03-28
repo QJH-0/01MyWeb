@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 管理端新建/编辑：表单校验与后端 Bean Validation 大致对齐；标签以逗号分隔再解析为数组提交。
+ */
 import axios from 'axios'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'

@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "app.probes.connect-timeout-ms=100",
         "app.probes.read-timeout-ms=100"
 })
+/** `/api/health` MockMvc 集成：探针指向不可达端口时仍返回统一信封与 traceId。 */
 class HealthControllerTest {
 
     @Autowired

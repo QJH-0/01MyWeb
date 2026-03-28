@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+/** 管理端更新项目：PUT 语义下全量提交可编辑字段（空串与 null 处理以 Service 为准）。 */
 public record ProjectUpdateRequest(
         @NotBlank
         @Size(max = 200)

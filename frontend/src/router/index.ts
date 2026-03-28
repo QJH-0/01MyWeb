@@ -1,3 +1,7 @@
+/**
+ * 路由表与轻量导航守卫：`requiresAuth` / `guestOnly` 仅依据本地 access token 是否存在；
+ * 细粒度 RBAC 在页面或接口层校验，避免在路由层重复维护权限列表。
+ */
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
@@ -103,6 +107,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
+  // 无 token 时拦截受保护路由；登录页带回跳地址，便于深链接场景。
   if (to.meta.requiresAuth && !hasAccessToken()) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }

@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.List;
 
+/** 标签批量读写：列表页 N+1 由 `findAllByProjectIdIn` 一次拉齐。 */
 public interface ProjectTagRepository extends JpaRepository<ProjectTagEntity, Long> {
     List<ProjectTagEntity> findAllByProjectIdIn(Collection<Long> projectIds);
 

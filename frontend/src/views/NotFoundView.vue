@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+/** 兜底 404，对应 history 模式的 catch-all 路由。 */
+</script>
 
 <template>
   <main class="page">

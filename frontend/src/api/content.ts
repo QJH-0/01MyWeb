@@ -1,3 +1,4 @@
+/** CMS 风格静态内容页：按 slug 映射的公开接口，供营销/介绍类页面渲染。 */
 import http, { type ApiResponse } from './http'
 
 export interface ContentPage {

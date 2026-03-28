@@ -1,3 +1,4 @@
+/** 认证相关 API：`/api/auth/*`，返回体均包在 {@link ApiResponse} 内。 */
 import http, { type ApiResponse } from './http'
 
 export interface RegisterRequest {

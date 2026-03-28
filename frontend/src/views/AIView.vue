@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+/** M6 AI 模块占位。 */
+</script>
 
 <template>
   <main class="page">

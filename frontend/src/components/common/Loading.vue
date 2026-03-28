@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 异步加载占位；`role="status"` + `aria-live` 便于读屏感知加载中。 */
 withDefaults(
   defineProps<{
     title?: string

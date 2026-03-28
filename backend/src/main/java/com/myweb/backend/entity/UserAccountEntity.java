@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/** 本地账户表：仅存凭证摘要，RBAC 关系在独立 rbac_* 表。 */
 @Entity
 @Table(name = "user_accounts")
 public class UserAccountEntity {

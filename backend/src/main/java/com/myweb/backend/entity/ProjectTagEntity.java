@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/** 项目标签行：按 project_id 批量替换写入，避免逗号分隔字符串难以索引与去重。 */
 @Entity
 @Table(name = "project_tag")
 public class ProjectTagEntity {

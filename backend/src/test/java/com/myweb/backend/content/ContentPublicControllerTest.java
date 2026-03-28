@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/** 公开内容页：按 page_key 返回 JSON sections 与 traceId。 */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional

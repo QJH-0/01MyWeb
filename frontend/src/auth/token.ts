@@ -1,3 +1,4 @@
+/** localStorage 中的 JWT 键名；改键需同步迁移策略，否则全站登出。 */
 const ACCESS_TOKEN_KEY = 'myweb.accessToken'
 const REFRESH_TOKEN_KEY = 'myweb.refreshToken'
 

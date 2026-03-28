@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 公开项目详情：校验路由 id；失败时保留路由中的 id 展示降级卡片，便于联调期辨认。 */
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchProjectDetail, type Project } from '../api/projects'

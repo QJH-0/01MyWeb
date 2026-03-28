@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 管理端项目 CRUD：需 JWT + 管理员权限 +（开发联调可选）管理 token，具体见 Security 配置。 */
 @RestController
 @RequestMapping("/api/admin/projects")
 public class AdminProjectController {
@@ -64,9 +65,14 @@ public class AdminProjectController {
         return ApiResponse.ok(null, traceId(httpRequest));
     }
 
+    /**
+     * 从请求属性中获取 traceId。
+     *
+     * @param request HTTP 请求
+     * @return traceId 字符串，若不存在则返回空字符串
+     */
     private String traceId(HttpServletRequest request) {
-        Object traceAttr = request.getAttribute(TraceIdFilter.TRACE_ID_REQUEST_ATTR);
-        return traceAttr == null ? "" : traceAttr.toString();
+        Object value = request.getAttribute(TraceIdFilter.TRACE_ID_REQUEST_ATTR);
+        return value == null ? "" : value.toString();
     }
 }
-

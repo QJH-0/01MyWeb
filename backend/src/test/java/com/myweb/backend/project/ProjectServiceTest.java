@@ -16,6 +16,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/** ProjectService 事务内行为：创建、更新、标签同步与边界异常。 */
 @SpringBootTest
 @Transactional
 class ProjectServiceTest {

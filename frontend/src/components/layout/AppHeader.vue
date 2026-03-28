@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 顶栏导航：移动端折叠菜单；管理入口仅在具备 `PERM_ADMIN_PANEL` 时展示，与后端 RBAC 对齐。
+ */
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
@@ -12,7 +15,7 @@ const username = computed(() => authStore.profile?.username ?? '')
 watch(
   () => route.fullPath,
   () => {
-    navOpen.value = false
+    navOpen.value = false // 路由切换时收起移动菜单，避免遮挡新页面。
   },
 )
 

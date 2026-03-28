@@ -29,6 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+/**
+ * 认证域服务：密码哈希、refresh 轮换（内存表，适合单实例/开发；多实例需外置存储）、IP 维度注册/登录频控。
+ */
 @Service
 public class AuthService {
     private final UserAccountRepository userAccountRepository;
@@ -40,6 +43,15 @@ public class AuthService {
     private final ConcurrentMap<String, RegisterWindow> registerWindows = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, RegisterWindow> loginWindows = new ConcurrentHashMap<>();
 
+    /**
+     * 服务构造器。
+     *
+     * @param userAccountRepository      用户账户仓库
+     * @param passwordEncoder            密码编码器
+     * @param jwtService                 JWT 服务
+     * @param securityProperties         安全配置属性
+     * @param rbacAuthorizationService   RBAC 授权服务
+     */
     public AuthService(
             UserAccountRepository userAccountRepository,
             PasswordEncoder passwordEncoder,
@@ -54,6 +66,10 @@ public class AuthService {
         this.rbacAuthorizationService = rbacAuthorizationService;
     }
 
+    /**
+     * 启动时初始化管理员账户。
+     * 如果配置了管理员用户名和密码，则创建或更新管理员账户。
+     */
     @PostConstruct
     public void bootstrapAdminAccount() {
         String username = securityProperties.admin().bootstrapUsername();
@@ -63,6 +79,15 @@ public class AuthService {
         }
     }
 
+    /**
+     * 用户注册。
+     * 验证验证码、检查限流、校验密码强度后创建新用户。
+     *
+     * @param request  注册请求
+     * @param sourceIp 来源 IP 地址（用于限流）
+     * @return 注册响应（包含用户ID和用户名）
+     * @throws ApiException 如果验证码无效、请求过于频繁或用户名已存在
+     */
     @Transactional
     public RegisterResponse register(RegisterRequest request, String sourceIp) {
         validateCaptcha(request.captchaToken());
@@ -72,6 +97,15 @@ public class AuthService {
         return new RegisterResponse(account.getUserId(), account.getUsername());
     }
 
+    /**
+     * 用户登录。
+     * 校验用户名密码，通过后颁发新 token。
+     *
+     * @param request  登录请求
+     * @param sourceIp 来源 IP 地址（用于限流）
+     * @return 认证令牌响应（包含 access token 和 refresh token）
+     * @throws ApiException 如果凭据无效或请求过于频繁
+     */
     public AuthTokenResponse login(LoginRequest request, String sourceIp) {
         enforceLoginRateLimit(sourceIp);
         UserAccountEntity account = userAccountRepository.findByUsername(request.username())
@@ -82,6 +116,14 @@ public class AuthService {
         return issueTokens(account);
     }
 
+    /**
+     * 刷新访问令牌。
+     * 使用有效的 refresh token 换取新的 token 对。
+     *
+     * @param request 刷新请求（包含 refresh token）
+     * @return 新的认证令牌响应
+     * @throws ApiException 如果 refresh token 无效或已过期
+     */
     public AuthTokenResponse refresh(RefreshRequest request) {
         RefreshTokenRecord record = refreshTokens.remove(request.refreshToken());
         if (record == null || record.expiresAt().isBefore(Instant.now())) {
@@ -92,10 +134,23 @@ public class AuthService {
         return issueTokens(account);
     }
 
+    /**
+     * 用户登出。
+     * 使指定的 refresh token 失效。
+     *
+     * @param refreshToken 要失效的 refresh token
+     */
     public void logout(String refreshToken) {
         refreshTokens.remove(refreshToken);
     }
 
+    /**
+     * 获取当前登录用户信息。
+     * 从认证主体中提取角色和权限信息。
+     *
+     * @param user 认证用户主体
+     * @return 用户信息响应（包含用户ID、用户名、角色和权限）
+     */
     public MeResponse me(AuthenticatedUser user) {
         Set<String> roles = user.getAuthorities().stream()
                 .map(Objects::toString)

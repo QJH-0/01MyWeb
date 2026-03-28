@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 可恢复错误：`retry` 事件把重试逻辑留给父组件（通常重新拉取接口）。 */
 defineProps<{
   title?: string
   message: string

@@ -1,3 +1,7 @@
+/**
+ * Axios 实例与统一响应信封：请求自动带 Bearer，401 时串行刷新 access token 后重试一次，避免并发风暴。
+ * 刷新失败会清本地 token，交由路由/页面引导重新登录。
+ */
 import axios from 'axios'
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '../auth/token'
 
@@ -16,9 +20,11 @@ interface RefreshPayload {
 }
 
 const http = axios.create({
+  /** 与后端默认超时大致对齐；过长会拖慢错误反馈，过短易误杀慢查询。 */
   timeout: 8000,
 })
 
+/** 同一时刻只进行一次 refresh，其余 401 重试共用这个 Promise。 */
 let refreshPromise: Promise<string | null> | null = null
 
 http.interceptors.request.use((config) => {
@@ -29,6 +35,7 @@ http.interceptors.request.use((config) => {
   return config
 })
 
+/** 请求刷新 access token，使用单例模式避免并发风暴。 */
 async function refreshAccessToken(): Promise<string | null> {
   if (!getRefreshToken()) {
     return null
@@ -74,6 +81,7 @@ http.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // refresh 自身 401 再重试会形成递归，直接失败并走 clearTokens（在 refreshAccessToken 内）。
     if (String(originalRequest.url).includes('/api/auth/refresh')) {
       return Promise.reject(error)
     }

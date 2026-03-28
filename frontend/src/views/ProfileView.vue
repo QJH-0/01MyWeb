@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 账户中心：进入时强制拉取 profile，失败则登出并回登录，避免展示陈旧权限。 */
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
@@ -20,6 +21,10 @@ onMounted(async () => {
   }
 })
 
+/**
+ * 退出登录。
+ * 清除认证状态并跳转到登录页。
+ */
 async function logout() {
   await authStore.logoutCurrentUser()
   await router.replace('/login')

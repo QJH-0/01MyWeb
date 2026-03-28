@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+/** 管理端创建项目请求体：约束与 {@link com.myweb.backend.entity.ProjectEntity} 列长一致。 */
 public record ProjectCreateRequest(
         @NotBlank
         @Size(max = 200)

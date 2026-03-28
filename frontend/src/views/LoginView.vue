@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 登录/注册合一页：提交后尊重 `redirect` 查询串，支持受保护路由回跳。
+ */
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
@@ -7,17 +10,30 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
+/** 当前模式：login 或 register */
 const mode = ref<'login' | 'register'>('login')
+/** 用户名输入 */
 const username = ref('')
+/** 密码输入 */
 const password = ref('')
+/** 确认密码输入（仅注册模式） */
 const confirmPassword = ref('')
+/** 验证码输入（仅注册模式） */
 const captchaToken = ref('')
+/** 成功反馈消息 */
 const feedback = ref<string | null>(null)
+/** 错误消息 */
 const error = ref<string | null>(null)
 
+/** 计算属性：提交按钮文字 */
 const submitLabel = computed(() => (mode.value === 'login' ? '登录' : '注册并登录'))
+/** 计算属性：页面标题 */
 const title = computed(() => (mode.value === 'login' ? '账号登录' : '新用户注册'))
 
+/**
+ * 提交登录/注册表单。
+ * 根据当前模式执行登录或注册操作，成功后跳转到 redirect 页面。
+ */
 async function onSubmit() {
   error.value = null
   feedback.value = null
@@ -61,6 +77,12 @@ async function onSubmit() {
   }
 }
 
+/**
+ * 切换登录/注册模式。
+ * 清空表单和状态。
+ *
+ * @param nextMode 目标模式
+ */
 function switchMode(nextMode: 'login' | 'register') {
   mode.value = nextMode
   error.value = null

@@ -24,12 +24,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * JWT 认证过滤器：从请求头解析 Bearer Token，构建认证主体并写入 SecurityContext。
+ * 过滤器顺序在 TraceIdFilter 之后（Ordered.LOWEST_PRECEDENCE - 100）。
+ */
 @Component
 @Order(200)
 public class JwtAuthenticationFilter extends OncePerRequestFilter implements Ordered {
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtService jwtService;
 
+    /**
+     * 构造 JWT 认证过滤器。
+     *
+     * @param jwtService JWT 服务
+     */
     public JwtAuthenticationFilter(
             JwtService jwtService
     ) {
@@ -38,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter implements Ord
 
     @Override
     public int getOrder() {
-        // Used by Spring Security when positioning this filter via addFilterBefore/addFilterAfter.
+        // 过滤器顺序，值越小越先执行
         return 200;
     }
 

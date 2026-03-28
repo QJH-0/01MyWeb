@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 公开 CMS 内容页：按固定 key（home/about/experience）映射存储，供门户静态页渲染。 */
 @RestController
 @RequestMapping("/api/content")
 public class ContentPublicController {
@@ -33,9 +34,14 @@ public class ContentPublicController {
         return ApiResponse.ok(contentQueryService.getPageByKey("experience"), traceId(httpRequest));
     }
 
+    /**
+     * 从请求属性中获取 traceId。
+     *
+     * @param request HTTP 请求
+     * @return traceId 字符串，若不存在则返回空字符串
+     */
     private String traceId(HttpServletRequest request) {
-        Object traceAttr = request.getAttribute(TraceIdFilter.TRACE_ID_REQUEST_ATTR);
-        return traceAttr == null ? "" : traceAttr.toString();
+        Object value = request.getAttribute(TraceIdFilter.TRACE_ID_REQUEST_ATTR);
+        return value == null ? "" : value.toString();
     }
 }
-

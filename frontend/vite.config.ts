@@ -1,3 +1,4 @@
+/** Vite：开发环境把 `/api` 代理到 `VITE_API_BASE_URL`，避免 CORS 与 cookie 域问题。 */
 import { loadEnv } from 'vite'
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'

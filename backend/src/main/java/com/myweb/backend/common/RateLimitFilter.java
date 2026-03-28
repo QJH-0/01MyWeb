@@ -60,15 +60,35 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * 判断是否需要对当前路径进行限流。
+     * 仅对 /api/ai/** 和 /api/search 路径启用限流。
+     *
+     * @param path 请求路径
+     * @return 是否需要限流
+     */
     private boolean shouldApplyRateLimit(String path) {
         return path.startsWith("/api/ai/") || path.startsWith("/api/search");
     }
 
+    /**
+     * 构建限流键：优先使用用户ID，否则使用IP地址。
+     *
+     * @param request HTTP 请求
+     * @param path    请求路径
+     * @return 限流键字符串
+     */
     private String buildLimitKey(HttpServletRequest request, String path) {
         String identity = extractIdentity(request);
         return identity + ":" + path;
     }
 
+    /**
+     * 提取请求身份标识：已登录用户使用 userId，匿名用户使用 IP 地址。
+     *
+     * @param request HTTP 请求
+     * @return 身份标识字符串（格式：user:{userId} 或 ip:{ip}）
+     */
     private String extractIdentity(HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()
@@ -84,6 +104,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return "ip:" + clientIp;
     }
 
+    /**
+     * 提取客户端真实 IP 地址。
+     * 优先从 X-Forwarded-For 和 X-Real-IP 头获取（支持反向代理），
+     * 否则使用 remoteAddr。
+     *
+     * @param request HTTP 请求
+     * @return 客户端 IP 地址
+     */
     private String extractClientIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isBlank()) {
@@ -96,6 +124,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return request.getRemoteAddr() != null ? request.getRemoteAddr() : "unknown";
     }
 
+    /**
+     * 检查当前限流键是否已超出限流阈值。
+     * 使用滑动窗口算法，每分钟重置计数。
+     *
+     * @param limitKey 限流键
+     * @return true 表示已限流，false 表示未限流
+     */
     private boolean isRateLimited(String limitKey) {
         Instant now = Instant.now();
         RateLimitWindow window = windows.compute(limitKey, (key, current) -> {
@@ -107,11 +142,23 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return window.count() > rateLimitPerMinute;
     }
 
+    /**
+     * 从请求属性中获取 traceId。
+     *
+     * @param request HTTP 请求
+     * @return traceId 字符串
+     */
     private String getTraceId(HttpServletRequest request) {
         Object traceAttr = request.getAttribute(TraceIdFilter.TRACE_ID_REQUEST_ATTR);
         return traceAttr == null ? "" : traceAttr.toString();
     }
 
+    /**
+     * 构建限流响应 JSON 字符串。
+     *
+     * @param traceId traceId
+     * @return JSON 格式的错误响应
+     */
     private String buildRateLimitResponse(String traceId) {
         return String.format(
                 "{\"success\":false,\"data\":null,\"error\":\"RATE_LIMITED\",\"timestamp\":\"%s\",\"traceId\":\"%s\"}",
@@ -120,6 +167,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         );
     }
 
+    /**
+     * 限流窗口记录：包含窗口结束时间和当前请求计数。
+     */
     private record RateLimitWindow(Instant windowEnd, int count) {
     }
 }

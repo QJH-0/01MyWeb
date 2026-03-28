@@ -16,6 +16,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * 管理路径双因子：在已 JWT 登录前提下校验 {@code X-Admin-Token} 与环境配置一致，防止仅靠用户角色误操作生产数据。
+ */
 @Component
 public class AdminTokenFilter extends OncePerRequestFilter {
     private static final String ADMIN_TOKEN_HEADER = "X-Admin-Token";

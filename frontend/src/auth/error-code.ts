@@ -1,3 +1,6 @@
+/**
+ * 将后端 `error` 业务码映射为面向用户的文案；未知码统一降级为通用提示，避免暴露内部细节。
+ */
 import axios from 'axios'
 
 const AUTH_ERROR_MESSAGE_MAP: Record<string, string> = {

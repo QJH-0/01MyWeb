@@ -1,3 +1,4 @@
+/** 应用入口：挂载 Pinia 与 Vue Router，样式全局注入。 */
 import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'

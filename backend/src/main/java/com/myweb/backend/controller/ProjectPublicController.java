@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 访客可见项目列表与详情：仅返回 visible 且未软删的数据（由 Service 保证）。 */
 @RestController
 @RequestMapping("/api/projects")
 public class ProjectPublicController {
@@ -36,6 +37,12 @@ public class ProjectPublicController {
         return ApiResponse.ok(projectService.getPublic(id), traceId(httpRequest));
     }
 
+    /**
+     * 从请求属性中获取 traceId。
+     *
+     * @param request HTTP 请求
+     * @return traceId 字符串，若不存在则返回空字符串
+     */
     private String traceId(HttpServletRequest request) {
         Object traceAttr = request.getAttribute(TraceIdFilter.TRACE_ID_REQUEST_ATTR);
         return traceAttr == null ? "" : traceAttr.toString();

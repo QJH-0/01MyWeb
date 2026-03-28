@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 列表/区块为空时的统一空态展示，避免各页重复写样式与文案结构。 */
 withDefaults(
   defineProps<{
     title?: string

@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+/** M3 博客列表占位路由，保证导航可达。 */
+</script>
 
 <template>
   <main class="page">

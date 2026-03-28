@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * 请求级 traceId：优先透传客户端 {@value #TRACE_ID_HEADER}，否则生成 UUID，并写入请求属性供异常处理与日志关联。
+ */
 @Component
 public class TraceIdFilter extends OncePerRequestFilter {
 

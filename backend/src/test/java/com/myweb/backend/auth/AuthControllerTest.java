@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/** 认证流集成：注册、登录、刷新、me、限流与错误码。 */
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuthControllerTest {

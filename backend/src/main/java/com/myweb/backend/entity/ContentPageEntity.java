@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 
 import java.time.Instant;
 
+/** CMS 页面：`page_key` 唯一映射 home/about 等；sections 以 JSON 文本存库。 */
 @Entity
 @Table(name = "content_page")
 public class ContentPageEntity {

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 首页：拉取 `/api/content/home`；网络/服务异常时用本地 fallback 与离线条，保证首屏可浏览。
+ */
 import { computed, onMounted, ref } from 'vue'
 import { fetchHomeContent, type ContentPage } from '../api/content'
 import BackendOfflineBanner from '../components/common/BackendOfflineBanner.vue'
@@ -19,6 +22,7 @@ const fallbackPage: ContentPage = {
   updatedAt: new Date(0).toISOString(),
 }
 
+/** 加载首页内容 */
 async function loadPage() {
   loading.value = true
   error.value = null
@@ -40,6 +44,7 @@ async function loadPage() {
   }
 }
 
+/** 计算属性：判断页面内容是否为空 */
 const isEmpty = computed(() => !page.value?.title && !page.value?.summary && (page.value?.sections?.length ?? 0) === 0)
 
 onMounted(loadPage)
