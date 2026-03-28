@@ -41,6 +41,12 @@ mvn spring-boot:run
 
 后端默认端口：`http://localhost:8080`
 
+### 开发环境默认管理员（Flyway V7）
+
+数据库迁移完成后会写入用户 **`myweb-admin`**，默认密码 **`MyWebAdm1n2026`**（本地/联调用；**生产务必改密或删户**）。该账号具备 `ROLE_ADMIN` / `PERM_ADMIN_PANEL`。
+
+调用 `/api/admin/**` 时除 JWT 外还需请求头 `X-Admin-Token`，需与后端 `APP_ADMIN_TOKEN` 一致；前端开发复制 `frontend/.env.example` 为 `.env` 并设置 `VITE_ADMIN_TOKEN`。
+
 ## 4. 启动前端
 
 1. 确保根目录 `.env` 已配置必要环境变量（前端构建时读取对应 `VITE_*` 配置）。
