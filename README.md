@@ -29,6 +29,18 @@ docker compose up -d mysql redis elasticsearch minio
 docker compose up -d nginx
 ```
 
+### Docker 挂死 / 引擎 API 500（常见为 Desktop + WSL2 后端异常）
+
+1. 在 **PowerShell 或 CMD**（建议管理员）执行：`wsl --shutdown`，然后重新启动 Docker Desktop，确认引擎就绪后再执行上面的 `docker compose`。
+2. 若已恢复正常，可在项目根目录按需停止本仓库 Compose 栈（项目名与目录一致时为 `01myweb`）：
+   ```bash
+   docker compose -p 01myweb stop
+   ```
+   或直接下线容器与默认网络：
+   ```bash
+   docker compose -p 01myweb down
+   ```
+
 ## 3. 启动后端
 
 1. 确保根目录 `.env` 已配置必要环境变量（不要提交真实密钥）。
@@ -39,7 +51,9 @@ cd backend
 mvn spring-boot:run
 ```
 
-后端默认端口：`http://localhost:8080`
+后端仅使用 **8080** 端口，访问地址：`http://localhost:8080`。
+
+若启动失败提示 8080 已被占用，请先释放该端口再重新运行后端：结束占用 8080 的进程后，再执行 `mvn spring-boot:run`。Windows 可先用 `netstat -ano | findstr :8080` 查看占用进程的 PID，再用 `taskkill /PID <pid> /F` 结束对应进程。
 
 ### 开发环境默认管理员（Flyway V7）
 
