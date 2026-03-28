@@ -4,6 +4,7 @@
  */
 import { computed, onMounted, ref } from 'vue'
 import { fetchProjects, type Project } from '../api/projects'
+import { toAbsoluteHttpUrl } from '../utils/url'
 import BackendOfflineBanner from '../components/common/BackendOfflineBanner.vue'
 import EmptyState from '../components/common/EmptyState.vue'
 import ErrorMessage from '../components/common/ErrorMessage.vue'
@@ -62,6 +63,10 @@ async function loadProjects() {
 const projects = computed(() => data.value?.list ?? [])
 const isEmpty = computed(() => !projects.value.length)
 
+function cardCoverSrc(p: Project) {
+  return toAbsoluteHttpUrl(p.coverUrl)
+}
+
 onMounted(loadProjects)
 </script>
 
@@ -105,11 +110,18 @@ onMounted(loadProjects)
 
         <div v-else class="grid" aria-label="项目列表">
           <router-link v-for="p in projects" :key="p.id" class="item" :to="`/projects/${p.id}`">
+            <img
+              v-if="cardCoverSrc(p)"
+              class="thumb"
+              :src="cardCoverSrc(p)!"
+              :alt="`「${p.title}」封面`"
+              loading="lazy"
+            />
             <p class="title">{{ p.title }}</p>
             <p class="summary">{{ p.summary }}</p>
             <div class="meta">
               <span v-if="p.category" class="chip">{{ p.category }}</span>
-              <span v-for="t in p.tags.slice(0, 3)" :key="t" class="chip muted">{{ t }}</span>
+              <span v-for="t in (p.tags ?? []).slice(0, 3)" :key="t" class="chip muted">{{ t }}</span>
             </div>
           </router-link>
         </div>
@@ -189,6 +201,16 @@ onMounted(loadProjects)
   background: rgba(255, 255, 255, 0.86);
   text-decoration: none;
   color: inherit;
+}
+
+.thumb {
+  width: calc(100% + 8px);
+  height: 120px;
+  margin: -4px -4px 10px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid rgba(203, 216, 231, 0.7);
+  background: rgba(79, 116, 163, 0.06);
 }
 
 .item:hover {

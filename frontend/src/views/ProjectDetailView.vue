@@ -3,6 +3,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchProjectDetail, type Project } from '../api/projects'
+import { toAbsoluteHttpUrl } from '../utils/url'
 import BackendOfflineBanner from '../components/common/BackendOfflineBanner.vue'
 import EmptyState from '../components/common/EmptyState.vue'
 import ErrorMessage from '../components/common/ErrorMessage.vue'
@@ -60,6 +61,10 @@ async function loadDetail() {
 }
 
 onMounted(loadDetail)
+
+const coverHref = computed(() => toAbsoluteHttpUrl(project.value?.coverUrl))
+const projectHref = computed(() => toAbsoluteHttpUrl(project.value?.projectUrl))
+const sourceHref = computed(() => toAbsoluteHttpUrl(project.value?.sourceUrl))
 </script>
 
 <template>
@@ -72,12 +77,20 @@ onMounted(loadDetail)
 
       <template v-else-if="project">
         <BackendOfflineBanner v-if="offline" :details="error ?? undefined" @retry="loadDetail" />
+        <img
+          v-if="coverHref"
+          class="cover"
+          :src="coverHref"
+          :alt="`「${project.title}」封面`"
+          loading="lazy"
+        />
+
         <h2 class="title">{{ project.title }}</h2>
         <p class="desc">{{ project.summary }}</p>
 
         <div class="meta">
           <span v-if="project.category" class="chip">{{ project.category }}</span>
-          <span v-for="t in project.tags" :key="t" class="chip muted">{{ t }}</span>
+          <span v-for="t in project.tags ?? []" :key="t" class="chip muted">{{ t }}</span>
         </div>
 
         <div v-if="project.description" class="section">
@@ -85,11 +98,23 @@ onMounted(loadDetail)
           <p class="desc">{{ project.description }}</p>
         </div>
 
-        <div class="links" v-if="project.projectUrl || project.sourceUrl">
-          <a v-if="project.projectUrl" class="link" :href="project.projectUrl" target="_blank" rel="noopener noreferrer">
+        <div class="links" v-if="projectHref || sourceHref">
+          <a
+            v-if="projectHref"
+            class="link"
+            :href="projectHref"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             访问项目
           </a>
-          <a v-if="project.sourceUrl" class="link" :href="project.sourceUrl" target="_blank" rel="noopener noreferrer">
+          <a
+            v-if="sourceHref"
+            class="link"
+            :href="sourceHref"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             源码
           </a>
         </div>
@@ -113,6 +138,17 @@ onMounted(loadDetail)
 </template>
 
 <style scoped>
+.cover {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  margin: 0 0 12px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid rgba(203, 216, 231, 0.85);
+  background: rgba(79, 116, 163, 0.06);
+}
+
 .title {
   margin: 12px 0 6px;
 }
