@@ -65,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/content/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/projects/**", "/api/blogs/**", "/api/search", "/api/search/**", "/api/comments/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/files/*/download").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/comments/**").hasAuthority(RbacPermission.COMMENT_WRITE.authority())
                         .requestMatchers(HttpMethod.PUT, "/api/comments/**").hasAuthority(RbacPermission.COMMENT_WRITE.authority())
                         .requestMatchers(HttpMethod.DELETE, "/api/comments/**").hasAuthority(RbacPermission.COMMENT_WRITE.authority())

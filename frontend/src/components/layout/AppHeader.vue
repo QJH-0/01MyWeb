@@ -30,6 +30,7 @@ const links = computed(() => {
     { to: '/admin/projects', label: '项目后台' },
     { to: '/blog', label: '博客' },
     { to: '/search', label: '搜索' },
+    { to: '/admin/files', label: '文件后台' },
     { to: '/admin/blogs', label: '博客后台' },
     { to: '/ai', label: 'AI' },
   ] as const

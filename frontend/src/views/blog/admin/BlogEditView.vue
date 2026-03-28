@@ -352,6 +352,9 @@ onMounted(async () => {
           <label class="field">
             <span>封面 URL</span>
             <input v-model="form.coverUrl" maxlength="1000" placeholder="https://..." />
+            <p class="field-hint">
+              可从 <router-link to="/admin/files">文件管理</router-link> 上传后复制访问链接粘贴到此处。
+            </p>
           </label>
 
           <label class="field">
@@ -416,6 +419,17 @@ onMounted(async () => {
 .hint {
   margin: 0;
   font-size: 13px;
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.field-hint a {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .warn {

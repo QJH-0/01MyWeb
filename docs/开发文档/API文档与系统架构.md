@@ -264,6 +264,7 @@
 
 2) `GET /api/admin/files`  
 - 查询参数：
+  - `fileType?: string`（可选；完整 MIME 精确筛选，非法格式返回校验错误）
   - `page?: number`（默认 `0`）
   - `limit?: number`（默认 `10`）  
 - 响应：`ApiResponse<PagedResult<FileItemDTO>>`

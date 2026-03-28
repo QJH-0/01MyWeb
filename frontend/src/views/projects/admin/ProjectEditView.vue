@@ -272,6 +272,9 @@ onMounted(async () => {
             <label class="field">
               <span>封面 URL</span>
               <input v-model="form.coverUrl" maxlength="1000" placeholder="https://..." />
+              <p class="field-hint">
+                可从 <router-link to="/admin/files">文件管理</router-link> 复制直链作为封面。
+              </p>
             </label>
             <label class="field">
               <span>项目 URL</span>
@@ -338,6 +341,17 @@ onMounted(async () => {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(79, 116, 163, 0.18);
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.field-hint a {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .grid-2 {

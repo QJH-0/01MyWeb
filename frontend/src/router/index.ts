@@ -19,6 +19,7 @@ const BlogView = () => import('../views/blog/BlogView.vue')
 const BlogDetailView = () => import('../views/blog/BlogDetailView.vue')
 const AdminBlogListView = () => import('../views/blog/admin/BlogListView.vue')
 const AdminBlogEditView = () => import('../views/blog/admin/BlogEditView.vue')
+const AdminFilesView = () => import('../views/files/admin/AdminFilesView.vue')
 const AIView = () => import('../views/AIView.vue')
 const SearchView = () => import('../views/SearchView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
@@ -95,6 +96,12 @@ const router = createRouter({
       path: '/blog/:id',
       name: 'blog-detail',
       component: BlogDetailView,
+    },
+    {
+      path: '/admin/files',
+      name: 'admin-files',
+      component: AdminFilesView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/admin/blogs',
