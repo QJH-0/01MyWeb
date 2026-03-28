@@ -1,0 +1,2 @@
+[GET] http://localhost:5173/api/auth/me => [200] OK
+[GET] http://localhost:5173/api/search?q=M4E2EUniqueToken2847&page=0&limit=10 => [200] OK

@@ -1,0 +1,5 @@
+﻿consume1: {"success":true,"data":{"processed":0},"error":null,"timestamp":"2026-03-28T11:52:21.872652500Z","traceId":"6e3d15d7-8f29-43ab-b902-c66b2dc23ec7"}
+consume2: {"success":true,"data":{"processed":0},"error":null,"timestamp":"2026-03-28T11:52:21.882739600Z","traceId":"80ea7db1-9021-4a4c-badb-0cef807a0b83"}
+search: {"success":true,"data":{"list":[{"sourceType":"blog","sourceId":3,"title":"M4 E2E æ é¢ M4E2EUniqueToken2847","url":"/blog/3","summary":"E2E æè¦ å¯æ£ç´¢ M4E2EUniqueToken2847","highlights":["E2E æè¦ å¯æ£ç´¢ \u003cmark\u003eM4E2EUniqueToken2847\u003c/mark\u003e","M4 E2E æ é¢ \u003cmark\u003eM4E2EUniqueToken2847\u003c/mark\u003e","# M4 E2E\n\næ­£ææ®µè½å\u0085å«å\u0085³é®è¯ \u003cmark\u003eM4E2EUniqueToken2847\u003c/mark\u003e ç¨äºé«äº®éªè¯ã"]}],"total":1,"page":0,"limit":10},"error":null,"timestamp":"2026-03-28T11:52:22.240104200Z","traceId":"c825c1f0-cba0-4e1e-bce5-d6ec5eb7f8c9"}
+after_delete_consume: {"success":true,"data":{"processed":0},"error":null,"timestamp":"2026-03-28T11:53:01.357006200Z","traceId":"458b9583-62c2-4454-b0bc-d0357a9da352"}
+search_after_delete: total=0 count=0
