@@ -12,4 +12,11 @@ describe('renderSafeMarkdown', () => {
     const html = renderSafeMarkdown('<script>alert(1)</script>\n\nPlain.')
     expect(html.toLowerCase()).not.toContain('<script')
   })
+
+  it('turns fenced mermaid blocks into diagram host divs', () => {
+    const html = renderSafeMarkdown('Intro\n\n```mermaid\ngraph TD\n  A-->B\n```\n\nOutro')
+    expect(html).toContain('myweb-mermaid')
+    expect(html).toContain('data-mermaid')
+    expect(html.toLowerCase()).not.toContain('graph td')
+  })
 })

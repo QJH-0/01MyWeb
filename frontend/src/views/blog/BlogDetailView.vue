@@ -3,11 +3,12 @@
  * 公开博客详情：Markdown 经 DOMPurify 过滤后渲染；404 与网络失败分流提示（非 404 才降级示例数据）。
  */
 import axios from 'axios'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchBlogDetail, type Blog } from '../../api/blogs'
 import { mapApiErrorCodeToMessage } from '../../auth/error-code'
 import { renderSafeMarkdown } from '../../utils/markdown'
+import { renderMermaidInElement } from '../../utils/mermaidRender'
 import { toAbsoluteHttpUrl } from '../../utils/url'
 import BackendOfflineBanner from '../../components/common/BackendOfflineBanner.vue'
 import ErrorMessage from '../../components/common/ErrorMessage.vue'
@@ -48,6 +49,15 @@ function formatPublished(iso: string | null | undefined) {
 
 const htmlBody = computed(() => renderSafeMarkdown(blog.value?.content ?? ''))
 const coverHref = computed(() => toAbsoluteHttpUrl(blog.value?.coverUrl))
+const mdRoot = ref<HTMLElement | null>(null)
+
+watch(
+  () => htmlBody.value,
+  async () => {
+    await nextTick()
+    await renderMermaidInElement(mdRoot.value)
+  },
+)
 
 async function loadDetail() {
   if (!Number.isFinite(id.value) || id.value <= 0) {
@@ -101,7 +111,7 @@ watch(
 
 <template>
   <main class="page">
-    <section class="card">
+    <section class="card blog-detail-card">
       <template v-if="loading">
         <Loading title="正在加载文章…" hint="从 /api/blogs/:id 获取数据" />
       </template>
@@ -133,7 +143,9 @@ watch(
           <span v-if="blog.viewCount != null" class="muted">阅读 {{ blog.viewCount }}</span>
         </div>
 
-        <article class="md-content" v-html="htmlBody" />
+        <div class="md-body">
+          <article ref="mdRoot" class="md-content" v-html="htmlBody" />
+        </div>
 
         <section class="comments-placeholder" aria-label="评论">
           <h2 class="h3">评论</h2>
@@ -155,6 +167,17 @@ watch(
 </template>
 
 <style scoped>
+.blog-detail-card {
+  width: min(1080px, 100%);
+  max-width: 100%;
+}
+
+.md-body {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
 .title {
   margin: 0 0 10px;
   font-weight: 900;
@@ -242,6 +265,55 @@ watch(
 .md-content :deep(ul),
 .md-content :deep(ol) {
   padding-left: 1.4em;
+}
+
+.md-content :deep(table) {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: max-content;
+  max-width: none;
+  font-size: 14px;
+}
+
+.md-content :deep(th),
+.md-content :deep(td) {
+  border: 1px solid var(--border, #cbd8e7);
+  padding: 10px 14px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.md-content :deep(th) {
+  background: rgba(79, 116, 163, 0.1);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.md-content :deep(tr:nth-child(even) td) {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.md-content :deep(.myweb-mermaid) {
+  margin: 1.25em 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 2rem;
+}
+
+.md-content :deep(.myweb-mermaid svg) {
+  max-width: 100%;
+  height: auto;
+}
+
+.md-content :deep(.mermaid-error) {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(180, 71, 95, 0.35);
+  background: rgba(180, 71, 95, 0.06);
+  color: var(--error, #b4475f);
+  font-size: 13px;
 }
 
 .h3 {
