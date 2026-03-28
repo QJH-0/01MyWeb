@@ -35,17 +35,21 @@ agent-browser wait visible @e5     # Wait for element
 agent-browser screenshot result.png
 ```
 
-## Fallback: Playwright
+## This repo: Cursor Playwright MCP（`user-playwright`）
 
-When Agent Browser isn't available, use Playwright directly.
+本仓库**不**在 `frontend` 内安装 `@playwright/test`。联调/验收关键路径时，在 Cursor 中启用 MCP **`playwright`**（`mcp.json` 里为 `@playwright/mcp`），由 Agent 调用 MCP 工具驱动浏览器（`browser_navigate`、`browser_snapshot`、`browser_click`、`browser_type`、`browser_fill_form`、`browser_handle_dialog`、`browser_take_screenshot` 等），按步骤执行场景并截图留证。
+
+前置条件与手工联调相同：后端 `8080`、前端 `vite`（通常 `5173`）、`frontend/.env` 中 `VITE_ADMIN_TOKEN` 与后端 `APP_ADMIN_TOKEN` 一致；管理员账号见项目 `README.md`。
+
+CI 若需无人值守 E2E，再单独引入 `@playwright/test` 或 Playwright 官方镜像工作流；日常开发以 MCP 交互为主。
+
+## Fallback: 本机 Playwright CLI（可选）
+
+仅当未配置 MCP、又需要脚本化回归时使用：
 
 ```bash
-npx playwright test                        # Run all E2E tests
-npx playwright test tests/auth.spec.ts     # Run specific file
-npx playwright test --headed               # See browser
-npx playwright test --debug                # Debug with inspector
-npx playwright test --trace on             # Run with trace
-npx playwright show-report                 # View HTML report
+npx playwright test
+npx playwright test --headed
 ```
 
 ## Workflow
@@ -63,9 +67,8 @@ npx playwright show-report                 # View HTML report
 - Use proper waits (never `waitForTimeout`)
 
 ### 3. Execute
-- Run locally 3-5 times to check for flakiness
-- Quarantine flaky tests with `test.fixme()` or `test.skip()`
-- Upload artifacts to CI
+- **MCP**：在同一对话中重复执行关键步骤，用 `browser_snapshot` 校验 DOM 与文案。
+- 脚本化套件：本地多跑几次观察不稳定用例；`test.fixme()` / `test.skip()` 隔离 flaky；CI 上传产物。
 
 ## Key Principles
 
