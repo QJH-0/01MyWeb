@@ -61,6 +61,7 @@ class CommentControllerIntegrationTest {
                                 """, blogId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content").value("root"))
+                .andExpect(jsonPath("$.data.authorUsername").value("admin"))
                 .andExpect(jsonPath("$.data.likeCount").value(0))
                 .andReturn();
 
@@ -72,7 +73,8 @@ class CommentControllerIntegrationTest {
                         .content("{\"content\":\"child\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.parentId").value(commentId))
-                .andExpect(jsonPath("$.data.content").value("child"));
+                .andExpect(jsonPath("$.data.content").value("child"))
+                .andExpect(jsonPath("$.data.authorUsername").value("admin"));
 
         mockMvc.perform(post("/api/comments/" + commentId + "/like")
                         .header("Authorization", "Bearer " + token))
@@ -90,7 +92,9 @@ class CommentControllerIntegrationTest {
                         .param("targetType", "blog")
                         .param("targetId", String.valueOf(blogId)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.total").value(2));
+                .andExpect(jsonPath("$.data.total").value(2))
+                .andExpect(jsonPath("$.data.list[0].authorUsername").value("admin"))
+                .andExpect(jsonPath("$.data.list[1].authorUsername").value("admin"));
     }
 
     @Test

@@ -10,6 +10,8 @@ export interface CommentItem {
   targetId: number
   content: string
   parentId: number | null
+  authorUserId: number
+  authorUsername: string
   likeCount: number
   createdAt: string
 }

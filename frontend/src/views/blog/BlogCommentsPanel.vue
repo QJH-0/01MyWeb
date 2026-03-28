@@ -14,6 +14,8 @@ import {
 } from '../../api/comments'
 import { mapApiErrorCodeToMessage } from '../../auth/error-code'
 import { hasAccessToken } from '../../auth/token'
+import { buildCommentTree } from '../../utils/commentTree'
+import CommentThreadNode from './CommentThreadNode.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -41,11 +43,6 @@ const replyTo = ref<{ id: number; preview: string } | null>(null)
 const replyBody = ref('')
 const submitting = ref(false)
 const likingId = ref<number | null>(null)
-
-function formatTime(iso: string) {
-  const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString('zh-CN')
-}
 
 async function loadFirstPage() {
   if (props.offline || !Number.isFinite(props.targetId) || props.targetId <= 0) {
@@ -190,7 +187,8 @@ function commentWriteErrorFromAxios(e: unknown) {
 
 function startReply(c: CommentItem) {
   actionError.value = null
-  replyTo.value = { id: c.id, preview: c.content.slice(0, 80) }
+  const who = c.authorUsername ? `${c.authorUsername}：` : ''
+  replyTo.value = { id: c.id, preview: `${who}${c.content}`.slice(0, 80) }
   replyBody.value = ''
 }
 
@@ -200,6 +198,8 @@ function cancelReply() {
 }
 
 const hasMore = computed(() => !props.offline && items.value.length < total.value)
+
+const threadRoots = computed(() => buildCommentTree(items.value))
 
 watch(
   () => [props.targetId, props.targetType, props.offline] as const,
@@ -222,37 +222,18 @@ watch(
 
       <p v-if="actionError" class="err">{{ actionError }}</p>
 
-      <div v-if="!loading && !loadError && items.length === 0" class="muted">还没有评论，欢迎抢沙发。</div>
+      <div v-if="!loading && !loadError && threadRoots.length === 0" class="muted">还没有评论，欢迎抢沙发。</div>
 
       <ul v-else class="list">
-        <li
-          v-for="c in items"
-          :key="c.id"
-          class="item"
-          :class="{ reply: c.parentId != null }"
-        >
-          <p class="body">{{ c.content }}</p>
-          <div class="row">
-            <span class="muted">{{ formatTime(c.createdAt) }}</span>
-            <span class="muted">赞 {{ c.likeCount }}</span>
-            <button
-              type="button"
-              class="linkish"
-              :disabled="likingId === c.id || submitting"
-              @click="onLike(c.id)"
-            >
-              点赞
-            </button>
-            <button
-              type="button"
-              class="linkish"
-              :disabled="submitting || !hasAccessToken()"
-              @click="startReply(c)"
-            >
-              回复
-            </button>
-          </div>
-        </li>
+        <CommentThreadNode
+          v-for="root in threadRoots"
+          :key="root.id"
+          :node="root"
+          :liking-id="likingId"
+          :submitting="submitting"
+          @like="onLike"
+          @reply="startReply"
+        />
       </ul>
 
       <button
@@ -322,47 +303,6 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.item {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(203, 216, 231, 0.75);
-}
-
-.item.reply {
-  margin-left: 20px;
-}
-
-.body {
-  margin: 0 0 8px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: 14px;
-  line-height: 1.55;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.linkish {
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--accent, #4f74a3);
-  cursor: pointer;
-}
-
-.linkish:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 
 .more {

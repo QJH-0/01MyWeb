@@ -11,10 +11,12 @@ import com.myweb.backend.dto.CommentLikeResultDTO;
 import com.myweb.backend.dto.CommentReplyRequest;
 import com.myweb.backend.entity.CommentEntity;
 import com.myweb.backend.entity.CommentLikeEntity;
+import com.myweb.backend.entity.UserAccountEntity;
 import com.myweb.backend.repository.BlogRepository;
 import com.myweb.backend.repository.CommentLikeRepository;
 import com.myweb.backend.repository.CommentRepository;
 import com.myweb.backend.repository.ProjectRepository;
+import com.myweb.backend.repository.UserAccountRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +25,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -33,21 +38,26 @@ import java.util.stream.Collectors;
 public class CommentService {
     private static final int MAX_LIMIT = 100;
 
+    private static final String UNKNOWN_AUTHOR_LABEL = "用户";
+
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final BlogRepository blogRepository;
     private final ProjectRepository projectRepository;
+    private final UserAccountRepository userAccountRepository;
 
     public CommentService(
             CommentRepository commentRepository,
             CommentLikeRepository commentLikeRepository,
             BlogRepository blogRepository,
-            ProjectRepository projectRepository
+            ProjectRepository projectRepository,
+            UserAccountRepository userAccountRepository
     ) {
         this.commentRepository = commentRepository;
         this.commentLikeRepository = commentLikeRepository;
         this.blogRepository = blogRepository;
         this.projectRepository = projectRepository;
+        this.userAccountRepository = userAccountRepository;
     }
 
     public PagedResult<CommentItemDTO> list(String targetTypeRaw, long targetId, int page, int limit) {
@@ -57,7 +67,9 @@ public class CommentService {
         Page<CommentEntity> data = commentRepository.findByTargetTypeAndTargetIdAndDeletedAtIsNull(
                 type, targetId, pageable
         );
-        List<CommentItemDTO> list = data.getContent().stream().map(this::toDto).collect(Collectors.toList());
+        List<CommentEntity> entities = data.getContent();
+        Map<Long, String> names = resolveUsernames(entities.stream().map(CommentEntity::getAuthorUserId).collect(Collectors.toSet()));
+        List<CommentItemDTO> list = entities.stream().map(e -> toDto(e, names)).collect(Collectors.toList());
         return new PagedResult<>(list, data.getTotalElements(), page, limit);
     }
 
@@ -106,6 +118,19 @@ public class CommentService {
         entity.setLikeCount(0);
         commentRepository.save(entity);
         return toDto(entity);
+    }
+
+    /** 批量解析用户名，避免列表接口 N+1；账户缺失时兜底展示固定文案「用户」。 */
+    private Map<Long, String> resolveUsernames(Set<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Map.of();
+        }
+        Set<Long> ids = userIds.stream().filter(id -> id != null && id > 0).collect(Collectors.toCollection(HashSet::new));
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return userAccountRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(UserAccountEntity::getUserId, UserAccountEntity::getUsername));
     }
 
     @Transactional
@@ -158,12 +183,20 @@ public class CommentService {
     }
 
     private CommentItemDTO toDto(CommentEntity e) {
+        return toDto(e, resolveUsernames(Set.of(e.getAuthorUserId())));
+    }
+
+    private CommentItemDTO toDto(CommentEntity e, Map<Long, String> usernames) {
+        Long uid = e.getAuthorUserId();
+        String username = usernames.getOrDefault(uid, UNKNOWN_AUTHOR_LABEL);
         return new CommentItemDTO(
                 e.getId(),
                 e.getTargetType(),
                 e.getTargetId(),
                 e.getContent(),
                 e.getParentId(),
+                uid,
+                username,
                 e.getLikeCount(),
                 e.getCreatedAt()
         );
