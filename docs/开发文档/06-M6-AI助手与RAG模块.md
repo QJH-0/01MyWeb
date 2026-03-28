@@ -8,6 +8,20 @@
 
 ## 1A. 阶段开发计划（前后端）
 
+### 后端技术栈门禁（强制，先于编码）
+
+> 本模块在 **M5 已验收通过** 的全站基线（搜索、文件、鉴权等）之上增加 AI；后端 **禁止** 采用与 `tech-spec.md` 不一致的 DashScope/AI 集成方式。
+
+- **依赖**：`com.alibaba.cloud.ai:spring-ai-alibaba-bom:1.1.2.2` 导入 `dependencyManagement`；对话与嵌入使用官方 **Starter**（如 `spring-ai-alibaba-starter-dashscope`），版本由 BOM 对齐。  
+- **抽象层**：对话/流式须基于 Spring AI 的 `ChatModel` / `ChatClient`（及流式 API），嵌入使用 `EmbeddingModel`；详见 `tech-spec.md` **§3.6A**。  
+- **文档优先**：实现前查阅 [java2ai.com](https://java2ai.com/docs/overview) 与 [Spring AI Alibaba 仓库](https://github.com/alibaba/spring-ai-alibaba)（含 `examples/chatbot`），**禁止**以非官方过时文章替代规范。  
+
+### 交付与注释门禁（强制）
+
+- **原因**：此前 AI 相关实现曾出现「代码几乎无注释」问题，增加评审与后续迭代成本。  
+- **规则**：与 `tech-spec.md` **§7.4**、`.cursor/rules/01common.mdc` **§七** 一致；凡本模块新增的 **Controller / Service / SSE 编排 / 前端对话页核心逻辑**，须在类或关键方法上说明 **意图、约束、错误与流式语义**，禁止零注释堆叠。  
+- **验收**：代码评审与 `99` M6 勾选时，将注释完整性作为 **DoD 子项**（与测试同级，不通过则不回填完成）。  
+
 ### 前端开发计划（M6）
 
 - AI 对话页（`/ai`）：流式渲染（增量拼接）、会话列表与切换、消息历史加载。

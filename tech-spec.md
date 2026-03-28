@@ -1,7 +1,7 @@
 # MyWeb 个人网站技术规范文档
 
-**文档版本**: v1.4  
-**更新日期**: 2026-03-24  
+**文档版本**: v1.5  
+**更新日期**: 2026-03-28  
 **关联文档**: `需求文档.md`
 
 本文档只描述**方案与约定**，不包含具体代码实现示例。
@@ -12,6 +12,7 @@
 - 接口契约唯一来源：`docs/开发文档/API文档与系统架构.md`。
 - 阶段顺序固定：`M0 -> M1 -> M2 -> M3 -> M4 -> M5 -> M6 -> M7 -> M8`。
 - 本文档只负责技术选型与非功能约束，不再重复维护接口字段细节。
+- **源代码注释与可维护性**：以 **§7.4** 为准，并与仓库 `.cursor/rules/01common.mdc`（§七 编码规范）一致；模型/人工交付均需遵守。
 
 ---
 
@@ -248,6 +249,22 @@ flowchart TB
 - 模型名称在配置中固定并版本化管理，不做运行时随意切换。  
 - 系统提示词说明助手身份、仅基于站点公开内容回答、无法回答时的措辞、可引导用户访问的页面类型；细节以 `prompts/chat-system.md` 维护。  
 
+#### 3.6A Spring AI Alibaba 实现门禁（强制）
+
+> 目的：避免使用过时博文、手写 HTTP 或非本仓库锁定 BOM 导致的实现偏差；**M6 在 M5 已验收基线之上推进**，后端 AI 能力只允许按下列方式落地。
+
+- **版本与 BOM（唯一合法组合）**  
+  - 在 `pom.xml` 的 `dependencyManagement` 中 **导入** `com.alibaba.cloud.ai:spring-ai-alibaba-bom:1.1.2.2`（与本文档锁定版本一致）。  
+  - 业务依赖使用 BOM 管理的 **Starter**（例如对话与嵌入：`spring-ai-alibaba-starter-dashscope`），具体 artifact 以 BOM 与 [官方发行说明](https://github.com/alibaba/spring-ai-alibaba/releases/tag/v1.1.2.2) 为准；若需 Spring AI 核心能力（如向量库、Chat 抽象），在 **同一 BOM 矩阵** 下引入 `org.springframework.ai:spring-ai-bom` 中与 Spring AI Alibaba 1.1.2.2 **兼容** 的版本（以官方 Release Notes / 依赖树解析为准），禁止混用未声明的传递版本。  
+- **API 抽象（禁止绕过）**  
+  - 对话与流式输出须基于 **Spring AI** 的 `ChatModel` / `ChatClient` / 流式 API（以当前 Spring AI 与 Starter 文档为准），经 **Spring AI Alibaba** 提供的 DashScope 集成注入；**禁止**将「手写 `HttpClient`/OkHttp 直调 DashScope OpenAPI」作为生产主路径（单元测试中的 Mock 除外）。  
+  - 嵌入须使用 **`EmbeddingModel`**（DashScope Starter 自动配置），与 §3.5 向量方案一致。  
+- **实现前必读（联网核对，优先于训练数据）**  
+  - 总览与 Quick Start：[java2ai.com 文档](https://java2ai.com/docs/overview)  
+  - DashScope 集成说明：[ChatModels / DashScope](https://java2ai.com/integration/chatmodels/dashScope)  
+  - 仓库与示例：[spring-ai-alibaba](https://github.com/alibaba/spring-ai-alibaba)（例如 [`examples/chatbot`](https://github.com/alibaba/spring-ai-alibaba/tree/main/examples/chatbot)）  
+  - 配置前缀与属性名以 **当前官方文档 + 所选 BOM 解析结果** 为准；若与旧文章冲突，以官方为准。  
+
 ### 3.7 AI 会话与记忆
 
 | 类型 | 介质 | 内容 | 策略 |
@@ -335,7 +352,7 @@ Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `
 ### 5.2 后端
 
 - 以 **Spring Boot 3.5.12** 的依赖管理为主；额外库（ES Java API、MinIO、Spring AI Alibaba）版本与 BOM 冲突时 **以 Spring Boot 与 Spring AI Alibaba 官方兼容矩阵为准**。
-- **Spring AI Alibaba 固定 1.1.2.2**，升级时同步阅读 [Release Notes](https://github.com/alibaba/spring-ai-alibaba/releases)。  
+- **Spring AI Alibaba 固定 1.1.2.2**：`dependencyManagement` 中 **必须** 显式导入 `spring-ai-alibaba-bom:1.1.2.2`，业务模块只引用 BOM 管理的坐标与版本；升级时同步阅读 [Release Notes](https://github.com/alibaba/spring-ai-alibaba/releases)。  
 - 启用向量 RAG 时：在 BOM 下增加 **Spring AI** 的 **`spring-ai-starter-vector-store-elasticsearch`**，与 **`spring-ai-alibaba-starter-dashscope`**（嵌入）组合；具体坐标与版本以 [Spring AI 向量库文档](https://docs.spring.io/spring-ai/reference/api/vectordbs/elasticsearch.html) 与当前 BOM 为准。  
 
 ### 5.3 前端
@@ -375,6 +392,15 @@ Compose 文件版本字段遵循当前 Docker Compose 规范（可省略过时 `
 - 开发环境可为联调临时简化安全配置；生产环境必须启用 HTTPS、鉴权与最小权限原则。
 - 密钥仅通过环境变量或密钥管理注入，禁止写入仓库。
 - Elasticsearch 开发可简化认证用于联调，生产必须启用认证与 TLS。
+
+### 7.4 源代码注释门禁（强制，与 Cursor 总规则一致）
+
+> 与 `.cursor/rules/01common.mdc` §七「注释规范（CRITICAL）」**同效**；此处写入 `tech-spec` 是为了让「按需打开技术规范」的模型与评审者也能读到。
+
+- **写什么**：注释说明 **为何、约束、取舍、边界**；**禁止**复述代码字面含义或逐行无信息量废话；修改代码须同步更新或删除过时注释。  
+- **必须写注释的场景**（非穷尽，命中即必须）：非显然算法与业务规则（含魔法数、公式）；安全/权限/一致性理由；临时方案或已知缺陷（含原因、影响、何时可删）；强时序、幂等、重试、事务边界等副作用。  
+- **交付判定**：新增或实质性改动的 **Service / 编排类 / 复杂 Controller / 非平凡 Vue 组合逻辑** 若整段缺乏上述维度的说明，视为 **DoD 未通过**，不得合并或进入下一阶段。极简 DTO/纯 getter-setter 可不强制，但不得在「复杂文件」里用零星 JSDoc 敷衍过关。  
+- **为何曾出现「代码无注释」**：自动化生成常默认省略说明；**本仓库不允许**以该理由省略门禁。  
 
 ---
 
