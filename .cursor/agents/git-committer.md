@@ -22,7 +22,8 @@ When invoked, execute in this order:
 2. `git diff` and `git diff --staged` — understand all unstaged/staged changes.
 3. `git log --oneline -10` — align with repository message style.
 4. Determine commit scope:
-   - Prefer focused commits by feature/fix boundary.
+   - **Repository policy**: Commit only when **(1) a feature is implemented *and* tested to an acceptable state**, or **(2) a single larger change to one feature area passes tests**. Do **not** create a commit for every tiny edit or single-file tweak; batch related work locally first.
+   - Prefer focused commits by feature/fix boundary (aligned with the policy above).
    - Exclude build artifacts and temporary files.
    - Exclude any likely secret files (`.env`, keys, credentials, tokens).
 5. Stage only target files with `git add <path>`.
