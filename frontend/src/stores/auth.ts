@@ -31,7 +31,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await login({ username, password })
       if (!response.success || !response.data) {
-        throw new Error(mapApiErrorCodeToMessage(response.error))
+        throw new Error(mapApiErrorCodeToMessage(response.error, 'authRegisterOrLogin'))
       }
       setTokens(response.data)
       try {
@@ -54,7 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const registerResult = await register({ username, password, captchaToken })
       if (!registerResult.success) {
-        throw new Error(mapApiErrorCodeToMessage(registerResult.error))
+        throw new Error(mapApiErrorCodeToMessage(registerResult.error, 'authRegisterOrLogin'))
       }
       await loginWithPassword(username, password)
     } catch (error: unknown) {
