@@ -8,6 +8,7 @@ import BackendOfflineBanner from '../components/common/BackendOfflineBanner.vue'
 import EmptyState from '../components/common/EmptyState.vue'
 import ErrorMessage from '../components/common/ErrorMessage.vue'
 import Loading from '../components/common/Loading.vue'
+import BlogCommentsPanel from './blog/BlogCommentsPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -118,6 +119,8 @@ const sourceHref = computed(() => toAbsoluteHttpUrl(project.value?.sourceUrl))
             源码
           </a>
         </div>
+
+        <BlogCommentsPanel target-type="project" :target-id="project.id" :offline="offline" />
 
         <p v-if="traceId" class="trace">traceId: {{ traceId }}</p>
 

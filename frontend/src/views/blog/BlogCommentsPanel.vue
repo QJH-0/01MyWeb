@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * 博客详情评论区：列表公开；写操作依赖登录，失败不误报成功（含网络/401/403）。
+ * 评论面板：博客/项目详情复用；列表公开；写操作依赖登录，失败不误报成功（含网络/401/403）。
  */
 import axios from 'axios'
 import { computed, ref, watch } from 'vue'
@@ -15,11 +15,15 @@ import {
 import { mapApiErrorCodeToMessage } from '../../auth/error-code'
 import { hasAccessToken } from '../../auth/token'
 
-const props = defineProps<{
-  blogId: number
-  /** 详情页处于离线降级时禁止拉取评论，避免对示例 ID 误请求 */
-  offline: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    targetType?: 'blog' | 'project'
+    targetId: number
+    /** 详情页处于离线降级时禁止拉取评论，避免对示例 ID 误请求 */
+    offline: boolean
+  }>(),
+  { targetType: 'blog' },
+)
 
 const route = useRoute()
 const loginRedirect = computed(() => ({ name: 'login', query: { redirect: route.fullPath } }))
@@ -44,7 +48,7 @@ function formatTime(iso: string) {
 }
 
 async function loadFirstPage() {
-  if (props.offline || !Number.isFinite(props.blogId) || props.blogId <= 0) {
+  if (props.offline || !Number.isFinite(props.targetId) || props.targetId <= 0) {
     items.value = []
     total.value = 0
     loadError.value = props.offline ? null : null
@@ -54,7 +58,7 @@ async function loadFirstPage() {
   loadError.value = null
   page.value = 0
   try {
-    const res = await fetchComments({ targetType: 'blog', targetId: props.blogId, page: 0, limit })
+    const res = await fetchComments({ targetType: props.targetType, targetId: props.targetId, page: 0, limit })
     if (!res.success || !res.data) {
       loadError.value = mapApiErrorCodeToMessage(res.error)
       items.value = []
@@ -81,7 +85,7 @@ async function loadMore() {
   if (props.offline || items.value.length >= total.value) return
   const nextPage = page.value + 1
   try {
-    const res = await fetchComments({ targetType: 'blog', targetId: props.blogId, page: nextPage, limit })
+    const res = await fetchComments({ targetType: props.targetType, targetId: props.targetId, page: nextPage, limit })
     if (res.success && res.data) {
       page.value = nextPage
       items.value = items.value.concat(res.data.list)
@@ -104,7 +108,7 @@ async function submitNew() {
   }
   submitting.value = true
   try {
-    const res = await createComment({ targetType: 'blog', targetId: props.blogId, content: text })
+    const res = await createComment({ targetType: props.targetType, targetId: props.targetId, content: text })
     if (!res.success || !res.data) {
       actionError.value = mapCommentWriteError(res.error)
       return
@@ -198,7 +202,7 @@ function cancelReply() {
 const hasMore = computed(() => !props.offline && items.value.length < total.value)
 
 watch(
-  () => [props.blogId, props.offline] as const,
+  () => [props.targetId, props.targetType, props.offline] as const,
   () => {
     void loadFirstPage()
   },

@@ -148,7 +148,7 @@ watch(
           <article ref="mdRoot" class="md-content" v-html="htmlBody" />
         </div>
 
-        <BlogCommentsPanel :blog-id="blog.id" :offline="offline" />
+        <BlogCommentsPanel :target-id="blog.id" :offline="offline" />
 
         <p v-if="traceId" class="trace">traceId: {{ traceId }}</p>
 
