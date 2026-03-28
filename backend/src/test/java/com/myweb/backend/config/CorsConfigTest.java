@@ -26,4 +26,14 @@ class CorsConfigTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
     }
+
+    @Test
+    void shouldAllowLoopbackIpv4OriginForViteDev() throws Exception {
+        mockMvc.perform(options("/api/auth/login")
+                        .header("Origin", "http://127.0.0.1:5173")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://127.0.0.1:5173"));
+    }
 }
