@@ -69,6 +69,10 @@ onMounted(loadPage)
             <p class="entry-title">项目</p>
             <p class="entry-desc">浏览项目列表与详情（M2 入口）</p>
           </router-link>
+          <router-link to="/admin/projects" class="entry-card entry-card--muted">
+            <p class="entry-title">项目后台</p>
+            <p class="entry-desc">维护项目（需登录；管理员权限与开发环境 Admin Token 见页内说明）</p>
+          </router-link>
           <router-link to="/blog" class="entry-card">
             <p class="entry-title">博客</p>
             <p class="entry-desc">阅读文章与专题（M3 入口）</p>

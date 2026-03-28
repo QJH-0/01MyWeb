@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /**
- * 顶栏导航：移动端折叠菜单；管理入口仅在具备 `PERM_ADMIN_PANEL` 时展示，与后端 RBAC 对齐。
+ * 顶栏导航：移动端折叠菜单。
+ * 「项目后台」对全员可见以便找到维护入口；实际增删改仍由后端鉴权 + 页面内 `PERM_ADMIN_PANEL` / `X-Admin-Token` 提示兜底。
  */
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -26,20 +27,16 @@ const links = computed(() => {
     { to: '/experience', label: '经历' },
     { to: '/contact', label: '联系' },
     { to: '/projects', label: '项目' },
+    { to: '/admin/projects', label: '项目后台' },
     { to: '/blog', label: '博客' },
     { to: '/ai', label: 'AI' },
   ] as const
-
-  const adminLinks =
-    authStore.isAuthenticated && authStore.profile?.permissions.includes('PERM_ADMIN_PANEL')
-      ? [{ to: '/admin/projects', label: '管理' }]
-      : []
 
   const accountLink = authStore.isAuthenticated
     ? [{ to: '/profile', label: '账户中心' }]
     : [{ to: '/login', label: '登录/注册' }]
 
-  return [...mainLinks, ...adminLinks, ...accountLink]
+  return [...mainLinks, ...accountLink]
 })
 </script>
 

@@ -218,7 +218,7 @@ body {
 
 .entry-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
 
@@ -236,6 +236,12 @@ body {
   transform: translateY(-2px);
   border-color: rgba(79, 116, 163, 0.55);
   box-shadow: 0 14px 28px rgba(58, 94, 138, 0.12);
+}
+
+/* 后台类入口：略弱视觉层级，避免抢主内容导流 */
+.entry-card--muted {
+  background: rgba(79, 116, 163, 0.04);
+  border-style: dashed;
 }
 
 .entry-title {

@@ -68,8 +68,13 @@ onMounted(loadProjects)
 <template>
   <main class="page">
     <section class="card">
-      <h1>项目列表</h1>
-      <p class="desc">展示项目列表与分类筛选（M2）。后端不可用时将使用默认数据降级渲染。</p>
+      <div class="page-head">
+        <div>
+          <h1>项目列表</h1>
+          <p class="desc">展示项目列表与分类筛选（M2）。后端不可用时将使用默认数据降级渲染。</p>
+        </div>
+        <router-link class="admin-cta" to="/admin/projects">项目后台</router-link>
+      </div>
 
       <template v-if="loading">
         <Loading title="正在加载项目列表…" hint="从 /api/projects 获取数据" />
@@ -116,6 +121,33 @@ onMounted(loadProjects)
 </template>
 
 <style scoped>
+.page-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.admin-cta {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(79, 116, 163, 0.35);
+  background: rgba(79, 116, 163, 0.08);
+  color: var(--accent, #4f74a3);
+  font-weight: 800;
+  font-size: 14px;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.admin-cta:hover {
+  border-color: rgba(79, 116, 163, 0.55);
+  background: rgba(79, 116, 163, 0.12);
+}
+
 .toolbar {
   margin: 14px 0 10px;
   display: flex;
