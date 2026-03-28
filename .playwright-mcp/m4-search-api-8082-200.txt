@@ -1,0 +1,13 @@
+# M4 搜索 API 验证（2026-03-28）
+
+前置：`mvn spring-boot:run --server.port=8082`（当前仓库代码，含 elasticsearch-java 8.19.13）；Flyway 已应用至 v10（search outbox）。
+
+请求：`GET http://localhost:8082/api/search?q=test&page=0&limit=10`
+
+响应示例（节选）：
+
+```json
+{"success":true,"data":{"list":[],"total":0,"page":0,"limit":10},"error":null,...}
+```
+
+说明：同机旧进程若仍监听 `8080` 且未重启，可能仍返回 `INTERNAL_ERROR`（旧依赖或未跑迁移）；**请停掉旧 Java 进程后只保留一个 `spring-boot:run`**，并确认数据库 Flyway 版本 ≥ v10。
