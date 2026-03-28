@@ -15,8 +15,10 @@ const ProjectsView = () => import('../views/ProjectsView.vue')
 const ProjectDetailView = () => import('../views/ProjectDetailView.vue')
 const AdminProjectListView = () => import('../views/projects/admin/ProjectListView.vue')
 const AdminProjectEditView = () => import('../views/projects/admin/ProjectEditView.vue')
-const BlogView = () => import('../views/BlogView.vue')
-const BlogDetailView = () => import('../views/BlogDetailView.vue')
+const BlogView = () => import('../views/blog/BlogView.vue')
+const BlogDetailView = () => import('../views/blog/BlogDetailView.vue')
+const AdminBlogListView = () => import('../views/blog/admin/BlogListView.vue')
+const AdminBlogEditView = () => import('../views/blog/admin/BlogEditView.vue')
 const AIView = () => import('../views/AIView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 
@@ -92,6 +94,24 @@ const router = createRouter({
       path: '/blog/:id',
       name: 'blog-detail',
       component: BlogDetailView,
+    },
+    {
+      path: '/admin/blogs',
+      name: 'admin-blogs',
+      component: AdminBlogListView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/blogs/new',
+      name: 'admin-blog-new',
+      component: AdminBlogEditView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/blogs/:id/edit',
+      name: 'admin-blog-edit',
+      component: AdminBlogEditView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/ai',
