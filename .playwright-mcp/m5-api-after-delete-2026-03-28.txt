@@ -1,0 +1,7 @@
+# M5 删除后下载接口留证（2026-03-28）
+
+```text
+GET http://127.0.0.1:8080/api/files/1/download
+HTTP 404
+{"success":false,"data":null,"error":"NOT_FOUND","timestamp":"2026-03-28T12:11:01.731082500Z","traceId":"2b2ad8a8-4cea-425a-bf6c-04606f3e718f"}
+```
