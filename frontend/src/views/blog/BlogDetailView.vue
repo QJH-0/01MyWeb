@@ -173,8 +173,7 @@ watch(
 }
 
 .md-body {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
   max-width: 100%;
 }
 
@@ -270,8 +269,8 @@ watch(
 .md-content :deep(table) {
   border-collapse: collapse;
   border-spacing: 0;
-  width: max-content;
-  max-width: none;
+  width: 100%;
+  table-layout: fixed;
   font-size: 14px;
 }
 
@@ -281,12 +280,13 @@ watch(
   padding: 10px 14px;
   vertical-align: top;
   text-align: left;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .md-content :deep(th) {
   background: rgba(79, 116, 163, 0.1);
   font-weight: 800;
-  white-space: nowrap;
 }
 
 .md-content :deep(tr:nth-child(even) td) {
