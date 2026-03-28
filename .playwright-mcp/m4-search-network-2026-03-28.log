@@ -1,0 +1,2 @@
+[GET] http://localhost:5173/api/auth/me => [200] OK
+[GET] http://localhost:5173/api/search?q=test&page=0&limit=10 => [500] Internal Server Error
