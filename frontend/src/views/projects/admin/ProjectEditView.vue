@@ -16,6 +16,7 @@ import {
 import BackendOfflineBanner from '../../../components/common/BackendOfflineBanner.vue'
 import ErrorMessage from '../../../components/common/ErrorMessage.vue'
 import Loading from '../../../components/common/Loading.vue'
+import { mapApiErrorCodeToMessage, toUserFriendlyApiError } from '../../../auth/error-code'
 import { hasAccessToken } from '../../../auth/token'
 
 const route = useRoute()
@@ -119,7 +120,7 @@ async function loadForEdit() {
   const response = await fetchAdminProjectDetail(id.value)
   traceId.value = response.traceId
   if (!response.success || !response.data) {
-    throw new Error(response.error ?? 'Admin project load failed')
+    throw new Error(mapApiErrorCodeToMessage(response.error))
   }
   setFromProject(response.data)
 }
@@ -140,7 +141,7 @@ async function load() {
     await loadForEdit()
   } catch (e) {
     offline.value = axios.isAxiosError(e) ? !e.response : true
-    error.value = e instanceof Error ? e.message : 'Unknown error'
+    error.value = toUserFriendlyApiError(e)
   } finally {
     loading.value = false
   }
@@ -177,13 +178,13 @@ async function save() {
       mode.value === 'create' ? await createAdminProject(payload) : await updateAdminProject(id.value, payload)
     traceId.value = response.traceId
     if (!response.success) {
-      throw new Error(response.error ?? 'Save failed')
+      throw new Error(mapApiErrorCodeToMessage(response.error))
     }
     success.value = mode.value === 'create' ? '创建成功' : '保存成功'
     await router.replace('/admin/projects')
   } catch (e) {
     offline.value = axios.isAxiosError(e) ? !e.response : true
-    error.value = e instanceof Error ? e.message : 'Unknown error'
+    error.value = toUserFriendlyApiError(e)
   } finally {
     saving.value = false
   }

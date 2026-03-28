@@ -26,7 +26,8 @@ export function mapApiErrorCodeToMessage(codeOrMessage: string | null | undefine
   return AUTH_ERROR_MESSAGE_MAP[codeOrMessage] ?? '请求失败，请稍后再试。'
 }
 
-export function toUserFriendlyAuthError(error: unknown): string {
+/** 解析 Axios 或非 Error 异常为可读文案；认证与业务接口共用同一套 error 码映射。 */
+export function toUserFriendlyApiError(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const code = (error.response?.data as { error?: string } | undefined)?.error
     return mapApiErrorCodeToMessage(code)
@@ -35,4 +36,8 @@ export function toUserFriendlyAuthError(error: unknown): string {
     return error.message
   }
   return '请求失败，请稍后再试。'
+}
+
+export function toUserFriendlyAuthError(error: unknown): string {
+  return toUserFriendlyApiError(error)
 }

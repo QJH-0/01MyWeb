@@ -12,6 +12,7 @@ import BackendOfflineBanner from '../../../components/common/BackendOfflineBanne
 import EmptyState from '../../../components/common/EmptyState.vue'
 import ErrorMessage from '../../../components/common/ErrorMessage.vue'
 import Loading from '../../../components/common/Loading.vue'
+import { mapApiErrorCodeToMessage, toUserFriendlyApiError } from '../../../auth/error-code'
 import { hasAccessToken } from '../../../auth/token'
 
 const router = useRouter()
@@ -63,12 +64,12 @@ async function load() {
     })
     traceId.value = response.traceId
     if (!response.success || !response.data) {
-      throw new Error(response.error ?? 'Admin projects load failed')
+      throw new Error(mapApiErrorCodeToMessage(response.error))
     }
     data.value = response.data
   } catch (e) {
     offline.value = axios.isAxiosError(e) ? !e.response : true
-    error.value = e instanceof Error ? e.message : 'Unknown error'
+    error.value = toUserFriendlyApiError(e)
     data.value = { list: [], total: 0, page: 0, limit: limit.value }
   } finally {
     loading.value = false
@@ -103,13 +104,13 @@ async function removeProject(p: Project) {
     const response = await deleteAdminProject(p.id)
     traceId.value = response.traceId
     if (!response.success) {
-      throw new Error(response.error ?? 'Delete failed')
+      throw new Error(mapApiErrorCodeToMessage(response.error))
     }
     successToast.value = '删除成功'
     await load()
   } catch (e) {
     offline.value = axios.isAxiosError(e) ? !e.response : true
-    error.value = e instanceof Error ? e.message : 'Unknown error'
+    error.value = toUserFriendlyApiError(e)
   }
 }
 
