@@ -11,6 +11,7 @@ import com.myweb.backend.entity.BlogEntity;
 import com.myweb.backend.entity.BlogTagEntity;
 import com.myweb.backend.repository.BlogRepository;
 import com.myweb.backend.repository.BlogTagRepository;
+import com.myweb.backend.search.SearchOutboxService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,10 +37,16 @@ public class BlogService {
 
     private final BlogRepository blogRepository;
     private final BlogTagRepository blogTagRepository;
+    private final SearchOutboxService searchOutboxService;
 
-    public BlogService(BlogRepository blogRepository, BlogTagRepository blogTagRepository) {
+    public BlogService(
+            BlogRepository blogRepository,
+            BlogTagRepository blogTagRepository,
+            SearchOutboxService searchOutboxService
+    ) {
         this.blogRepository = blogRepository;
         this.blogTagRepository = blogTagRepository;
+        this.searchOutboxService = searchOutboxService;
     }
 
     public PagedResult<BlogResponseDTO> listPublic(String category, String tag, int page, int limit) {
@@ -101,6 +108,7 @@ public class BlogService {
 
         BlogEntity saved = blogRepository.save(entity);
         replaceTags(saved.getId(), request.tags());
+        searchOutboxService.enqueueBlogUpdated(saved.getId());
         return getAdmin(saved.getId());
     }
 
@@ -116,6 +124,7 @@ public class BlogService {
                 request.content(), request.coverUrl());
         blogRepository.save(entity);
         replaceTags(entity.getId(), request.tags());
+        searchOutboxService.enqueueBlogUpdated(entity.getId());
         return getAdmin(entity.getId());
     }
 
@@ -125,6 +134,7 @@ public class BlogService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.NOT_FOUND, "Blog not found"));
         entity.setDeletedAt(Instant.now());
         blogRepository.save(entity);
+        searchOutboxService.enqueueBlogDeleted(id);
     }
 
     @Transactional
@@ -140,6 +150,7 @@ public class BlogService {
             entity.setPublishedAt(Instant.now());
         }
         blogRepository.save(entity);
+        searchOutboxService.enqueueBlogUpdated(id);
         return getAdmin(id);
     }
 
@@ -149,6 +160,7 @@ public class BlogService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.NOT_FOUND, "Blog not found"));
         entity.setStatus(BlogStatus.DRAFT);
         blogRepository.save(entity);
+        searchOutboxService.enqueueBlogUpdated(id);
         return getAdmin(id);
     }
 

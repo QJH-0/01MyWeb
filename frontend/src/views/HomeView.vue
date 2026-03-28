@@ -77,6 +77,10 @@ onMounted(loadPage)
             <p class="entry-title">博客</p>
             <p class="entry-desc">阅读文章与专题（M3 入口）</p>
           </router-link>
+          <router-link to="/search" class="entry-card">
+            <p class="entry-title">搜索</p>
+            <p class="entry-desc">全文检索博客与项目（M4 入口）</p>
+          </router-link>
           <router-link to="/ai" class="entry-card">
             <p class="entry-title">AI</p>
             <p class="entry-desc">对话与检索增强（M6 入口）</p>

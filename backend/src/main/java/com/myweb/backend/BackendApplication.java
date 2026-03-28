@@ -3,10 +3,12 @@ package com.myweb.backend;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /** Spring Boot 入口：扫描并绑定 {@code @ConfigurationProperties} 型配置 bean。 */
 @SpringBootApplication
 @ConfigurationPropertiesScan
+@EnableScheduling
 public class BackendApplication {
 
     public static void main(String[] args) {

@@ -51,3 +51,13 @@ app:
       port: ${MINIO_PROBE_PORT:9000}
     connect-timeout-ms: ${PROBE_CONNECT_TIMEOUT_MS:800}
     read-timeout-ms: ${PROBE_READ_TIMEOUT_MS:1200}
+  search:
+    index-name: ${SEARCH_INDEX_NAME:myweb_content}
+    elasticsearch:
+      enabled: ${SEARCH_ES_ENABLED:true}
+      host: ${ES_HOST:localhost}
+      port: ${ES_PORT:9200}
+    outbox:
+      scheduler-enabled: ${SEARCH_OUTBOX_SCHEDULER_ENABLED:true}
+      poll-ms: ${SEARCH_OUTBOX_POLL_MS:5000}
+      batch-size: ${SEARCH_OUTBOX_BATCH_SIZE:50}

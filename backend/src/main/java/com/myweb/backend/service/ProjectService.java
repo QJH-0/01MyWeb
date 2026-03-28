@@ -10,6 +10,7 @@ import com.myweb.backend.entity.ProjectEntity;
 import com.myweb.backend.entity.ProjectTagEntity;
 import com.myweb.backend.repository.ProjectRepository;
 import com.myweb.backend.repository.ProjectTagRepository;
+import com.myweb.backend.search.SearchOutboxService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ public class ProjectService {
     private static final int MAX_LIMIT = 100;
     private final ProjectRepository projectRepository;
     private final ProjectTagRepository projectTagRepository;
+    private final SearchOutboxService searchOutboxService;
 
     /**
      * 构造项目服务。
@@ -40,9 +42,14 @@ public class ProjectService {
      * @param projectRepository    项目仓库
      * @param projectTagRepository 项目标签仓库
      */
-    public ProjectService(ProjectRepository projectRepository, ProjectTagRepository projectTagRepository) {
+    public ProjectService(
+            ProjectRepository projectRepository,
+            ProjectTagRepository projectTagRepository,
+            SearchOutboxService searchOutboxService
+    ) {
         this.projectRepository = projectRepository;
         this.projectTagRepository = projectTagRepository;
+        this.searchOutboxService = searchOutboxService;
     }
 
     /**
@@ -152,6 +159,7 @@ public class ProjectService {
 
         ProjectEntity saved = projectRepository.save(entity);
         replaceTags(saved.getId(), request.tags());
+        searchOutboxService.enqueueProjectUpdated(saved.getId());
         return getAdmin(saved.getId());
     }
 
@@ -180,6 +188,7 @@ public class ProjectService {
 
         projectRepository.save(entity);
         replaceTags(entity.getId(), request.tags());
+        searchOutboxService.enqueueProjectUpdated(entity.getId());
         return getAdmin(entity.getId());
     }
 
@@ -196,6 +205,7 @@ public class ProjectService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.NOT_FOUND, "Project not found"));
         entity.setDeletedAt(Instant.now());
         projectRepository.save(entity);
+        searchOutboxService.enqueueProjectDeleted(id);
     }
 
     /**

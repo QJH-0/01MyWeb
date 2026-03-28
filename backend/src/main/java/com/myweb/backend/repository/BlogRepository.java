@@ -43,4 +43,6 @@ public interface BlogRepository extends JpaRepository<BlogEntity, Long> {
     boolean existsBySlugAndDeletedAtIsNull(String slug);
 
     boolean existsBySlugAndDeletedAtIsNullAndIdNot(String slug, Long id);
+
+    Page<BlogEntity> findAllByDeletedAtIsNullAndStatus(String status, Pageable pageable);
 }

@@ -1,4 +1,9 @@
 app:
+  search:
+    elasticsearch:
+      enabled: false
+    outbox:
+      scheduler-enabled: false
   security:
     rate-limit-per-minute: 120
     register:

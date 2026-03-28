@@ -20,6 +20,7 @@ const BlogDetailView = () => import('../views/blog/BlogDetailView.vue')
 const AdminBlogListView = () => import('../views/blog/admin/BlogListView.vue')
 const AdminBlogEditView = () => import('../views/blog/admin/BlogEditView.vue')
 const AIView = () => import('../views/AIView.vue')
+const SearchView = () => import('../views/SearchView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 
 const router = createRouter({
@@ -117,6 +118,11 @@ const router = createRouter({
       path: '/ai',
       name: 'ai',
       component: AIView,
+    },
+    {
+      path: '/search',
+      name: 'search',
+      component: SearchView,
     },
     {
       path: '/:pathMatch(.*)*',
